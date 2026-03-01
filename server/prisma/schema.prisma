@@ -89,7 +89,8 @@ model Transaction {
   // Contestation
   disputed      Boolean @default(false)
   disputeNote   String?
-  disputeStatus String? // "OUVERTE" | "RESOLUE"
+  disputeStatus String? // "OUVERTE" | "ACCEPTEE" | "REJETEE"
+  resolveNote   String?
 
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdById Int

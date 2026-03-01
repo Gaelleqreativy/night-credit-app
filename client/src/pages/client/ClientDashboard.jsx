@@ -128,9 +128,21 @@ export default function ClientDashboard() {
                         <p className="text-xs text-gray-600">Réf : {t.ticketRef}</p>
                       )}
                       {t.disputed && (
-                        <span className={`text-xs ${t.disputeStatus === 'RESOLUE' ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                          {t.disputeStatus === 'RESOLUE' ? '✓ Contestation résolue' : '⚠️ En cours de contestation'}
-                        </span>
+                        <div className="mt-1">
+                          {t.disputeStatus === 'ACCEPTEE' ? (
+                            <div>
+                              <span className="text-xs text-emerald-400">✓ Contestation acceptée</span>
+                              {t.resolveNote && <p className="text-xs text-gray-400 mt-0.5">{t.resolveNote}</p>}
+                            </div>
+                          ) : t.disputeStatus === 'REJETEE' ? (
+                            <div>
+                              <span className="text-xs text-red-400">✗ Contestation rejetée</span>
+                              {t.resolveNote && <p className="text-xs text-gray-400 mt-0.5">{t.resolveNote}</p>}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-yellow-400">⏳ En cours de traitement</span>
+                          )}
+                        </div>
                       )}
                     </div>
 

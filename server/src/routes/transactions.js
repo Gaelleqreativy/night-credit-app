@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const { PrismaClient } = require('@prisma/client')
-const { authAdmin, authClient, requireNotManager } = require('../middleware/auth')
+const { authAdmin, authClient, requireNotManager, requireAdmin } = require('../middleware/auth')
 const { uploadTicket } = require('../middleware/upload')
 const { logAudit } = require('../services/audit')
 const { updateClientStatus } = require('../services/clientStatus')
@@ -139,8 +139,33 @@ router.post('/paiement', authAdmin, requireNotManager, async (req, res) => {
   }
 })
 
-// DELETE /api/transactions/:id — supprimer (admin)
-router.delete('/:id', authAdmin, requireNotManager, async (req, res) => {
+// PUT /api/transactions/:id — modifier une transaction (ADMIN seulement)
+router.put('/:id', authAdmin, requireAdmin, async (req, res) => {
+  const { date, consommation, paiement, moyenPaiement, ticketRef, notes, establishmentId } = req.body
+  try {
+    const tx = await prisma.transaction.findUnique({ where: { id: Number(req.params.id) } })
+    if (!tx) return res.status(404).json({ error: 'Transaction introuvable' })
+
+    const data = {}
+    if (date) data.date = new Date(date)
+    if (establishmentId) data.establishmentId = Number(establishmentId)
+    if (ticketRef !== undefined) data.ticketRef = ticketRef
+    if (notes !== undefined) data.notes = notes
+    if (tx.type === 'CONSOMMATION' && consommation !== undefined) data.consommation = Number(consommation)
+    if (tx.type === 'PAIEMENT' && paiement !== undefined) data.paiement = Number(paiement)
+    if (tx.type === 'PAIEMENT' && moyenPaiement) data.moyenPaiement = moyenPaiement
+
+    const updated = await prisma.transaction.update({ where: { id: tx.id }, data })
+    await updateClientStatus(tx.clientId)
+    await logAudit(req.user.id, 'UPDATE', 'Transaction', tx.id, req.body)
+    res.json(updated)
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// DELETE /api/transactions/:id — supprimer (ADMIN seulement)
+router.delete('/:id', authAdmin, requireAdmin, async (req, res) => {
   try {
     const tx = await prisma.transaction.findUnique({ where: { id: Number(req.params.id) } })
     if (!tx) return res.status(404).json({ error: 'Transaction introuvable' })
@@ -175,12 +200,16 @@ router.post('/:id/dispute', authClient, async (req, res) => {
 
 // PUT /api/transactions/:id/resolve-dispute — résoudre contestation (admin)
 router.put('/:id/resolve-dispute', authAdmin, requireNotManager, async (req, res) => {
+  const { resolveType, resolveNote } = req.body
+  if (!resolveType || !['ACCEPTEE', 'REJETEE'].includes(resolveType))
+    return res.status(400).json({ error: 'resolveType doit être ACCEPTEE ou REJETEE' })
+
   try {
     const tx = await prisma.transaction.update({
       where: { id: Number(req.params.id) },
-      data: { disputeStatus: 'RESOLUE' },
+      data: { disputeStatus: resolveType, resolveNote: resolveNote || null },
     })
-    await logAudit(req.user.id, 'UPDATE', 'Transaction', tx.id, { action: 'resolve_dispute' })
+    await logAudit(req.user.id, 'UPDATE', 'Transaction', tx.id, { action: 'resolve_dispute', resolveType, resolveNote })
     res.json(tx)
   } catch (e) {
     res.status(500).json({ error: e.message })

@@ -13,6 +13,12 @@ export default function DisputesPage() {
   const [dateTo, setDateTo] = useState('')
   const [statusFilter, setStatusFilter] = useState('OUVERTE')
 
+  // Modal résolution
+  const [resolveTx, setResolveTx] = useState(null)
+  const [resolveNote, setResolveNote] = useState('')
+  const [resolveLoading, setResolveLoading] = useState(false)
+  const [resolveError, setResolveError] = useState('')
+
   async function fetchDisputes() {
     setLoading(true)
     const { data } = await api.get('/transactions?disputed=true')
@@ -22,9 +28,24 @@ export default function DisputesPage() {
 
   useEffect(() => { fetchDisputes() }, [])
 
-  async function resolve(id) {
-    await api.put(`/transactions/${id}/resolve-dispute`)
-    fetchDisputes()
+  function openResolveModal(tx) {
+    setResolveTx(tx)
+    setResolveNote('')
+    setResolveError('')
+  }
+
+  async function handleResolve(resolveType) {
+    setResolveLoading(true)
+    setResolveError('')
+    try {
+      await api.put(`/transactions/${resolveTx.id}/resolve-dispute`, { resolveType, resolveNote })
+      setResolveTx(null)
+      fetchDisputes()
+    } catch (err) {
+      setResolveError(err.response?.data?.error || 'Erreur')
+    } finally {
+      setResolveLoading(false)
+    }
   }
 
   // Etablissements distincts
@@ -37,7 +58,10 @@ export default function DisputesPage() {
   // Filtrage
   const filtered = useMemo(() => {
     return disputes.filter((d) => {
-      if (statusFilter !== 'TOUTES' && d.disputeStatus !== statusFilter) return false
+      if (statusFilter === 'OUVERTE' && d.disputeStatus !== 'OUVERTE') return false
+      if (statusFilter === 'RESOLUES' && d.disputeStatus !== 'ACCEPTEE' && d.disputeStatus !== 'REJETEE') return false
+      if (statusFilter === 'ACCEPTEE' && d.disputeStatus !== 'ACCEPTEE') return false
+      if (statusFilter === 'REJETEE' && d.disputeStatus !== 'REJETEE') return false
       if (search) {
         const q = search.toLowerCase()
         const name = `${d.client?.lastName} ${d.client?.firstName}`.toLowerCase()
@@ -51,13 +75,16 @@ export default function DisputesPage() {
   }, [disputes, search, establishmentId, dateFrom, dateTo, statusFilter])
 
   const open = filtered.filter((d) => d.disputeStatus === 'OUVERTE')
-  const resolved = filtered.filter((d) => d.disputeStatus === 'RESOLUE')
+  const resolved = filtered.filter((d) => d.disputeStatus === 'ACCEPTEE' || d.disputeStatus === 'REJETEE')
   const totalOpen = disputes.filter((d) => d.disputeStatus === 'OUVERTE').length
 
   function fmtDate(d) { return new Date(d).toLocaleDateString('fr-FR') }
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }
   function resetFilters() { setSearch(''); setEstablishmentId(''); setDateFrom(''); setDateTo(''); setStatusFilter('OUVERTE') }
   const hasActiveFilters = search || establishmentId || dateFrom || dateTo || statusFilter !== 'OUVERTE'
+
+  const showOpen = statusFilter === 'OUVERTE' || statusFilter === 'TOUTES'
+  const showResolved = statusFilter === 'RESOLUES' || statusFilter === 'ACCEPTEE' || statusFilter === 'REJETEE' || statusFilter === 'TOUTES'
 
   return (
     <div className="space-y-5 max-w-4xl">
@@ -84,7 +111,9 @@ export default function DisputesPage() {
           </select>
           <select className="input w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="OUVERTE">Ouvertes</option>
-            <option value="RESOLUE">Résolues</option>
+            <option value="RESOLUES">Résolues</option>
+            <option value="ACCEPTEE">Acceptées</option>
+            <option value="REJETEE">Rejetées</option>
             <option value="TOUTES">Toutes</option>
           </select>
         </div>
@@ -114,7 +143,7 @@ export default function DisputesPage() {
       )}
 
       {/* Ouvertes */}
-      {(statusFilter === 'OUVERTE' || statusFilter === 'TOUTES') && (
+      {showOpen && (
         <div className="card p-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-night-800 flex items-center gap-2">
             <h2 className="font-semibold">Contestations ouvertes</h2>
@@ -132,7 +161,7 @@ export default function DisputesPage() {
                   <th className="text-left px-4 py-2">Client</th>
                   <th className="text-left px-4 py-2 hidden md:table-cell">Établissement</th>
                   <th className="text-right px-4 py-2">Montant</th>
-                  <th className="text-left px-4 py-2">Motif</th>
+                  <th className="text-left px-4 py-2">Motif client</th>
                   <th className="px-4 py-2"></th>
                 </tr>
               </thead>
@@ -149,8 +178,8 @@ export default function DisputesPage() {
                     <td className="px-4 py-3 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
                     <td className="px-4 py-3 text-yellow-300 text-sm max-w-xs truncate">{d.disputeNote}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => resolve(d.id)} className="btn-success text-xs px-3 py-1 whitespace-nowrap">
-                        Résoudre
+                      <button onClick={() => openResolveModal(d)} className="btn-primary text-xs px-3 py-1 whitespace-nowrap">
+                        Traiter
                       </button>
                     </td>
                   </tr>
@@ -162,10 +191,10 @@ export default function DisputesPage() {
       )}
 
       {/* Résolues */}
-      {(statusFilter === 'RESOLUE' || statusFilter === 'TOUTES') && resolved.length > 0 && (
+      {showResolved && resolved.length > 0 && (
         <div className="card p-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-night-800">
-            <h2 className="font-semibold text-gray-400">Contestations résolues ({resolved.length})</h2>
+            <h2 className="font-semibold text-gray-400">Contestations traitées ({resolved.length})</h2>
           </div>
           <table className="w-full text-sm">
             <thead className="border-b border-night-800">
@@ -174,13 +203,14 @@ export default function DisputesPage() {
                 <th className="text-left px-4 py-2">Client</th>
                 <th className="text-left px-4 py-2 hidden md:table-cell">Établissement</th>
                 <th className="text-right px-4 py-2">Montant</th>
-                <th className="text-left px-4 py-2">Motif</th>
-                <th className="px-4 py-2"></th>
+                <th className="text-left px-4 py-2">Motif client</th>
+                <th className="text-left px-4 py-2">Réponse admin</th>
+                <th className="px-4 py-2">Statut</th>
               </tr>
             </thead>
             <tbody>
               {resolved.map((d) => (
-                <tr key={d.id} className="border-b border-night-800/50 opacity-60">
+                <tr key={d.id} className="border-b border-night-800/50 opacity-70">
                   <td className="px-4 py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                   <td className="px-4 py-2">
                     <Link to={`/admin/clients/${d.clientId}`} className="text-indigo-400 hover:underline">
@@ -189,12 +219,75 @@ export default function DisputesPage() {
                   </td>
                   <td className="px-4 py-2 text-gray-500 hidden md:table-cell">{d.establishment?.name}</td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
-                  <td className="px-4 py-2 text-gray-400 text-sm max-w-xs truncate">{d.disputeNote}</td>
-                  <td className="px-4 py-2"><span className="badge badge-green">Résolu</span></td>
+                  <td className="px-4 py-2 text-gray-400 text-sm max-w-[160px] truncate">{d.disputeNote}</td>
+                  <td className="px-4 py-2 text-gray-400 text-sm max-w-[160px] truncate">{d.resolveNote || '-'}</td>
+                  <td className="px-4 py-2">
+                    {d.disputeStatus === 'ACCEPTEE'
+                      ? <span className="badge badge-green">Acceptée</span>
+                      : <span className="badge badge-red">Rejetée</span>
+                    }
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal résolution */}
+      {resolveTx && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-1">Traiter la contestation</h2>
+            <div className="mb-4 space-y-1">
+              <p className="text-sm text-gray-300">
+                <span className="text-gray-500">Client :</span> {resolveTx.client?.lastName} {resolveTx.client?.firstName}
+              </p>
+              <p className="text-sm text-gray-300">
+                <span className="text-gray-500">Montant :</span> {fmt(resolveTx.consommation || resolveTx.paiement)}
+              </p>
+              <p className="text-sm text-yellow-300 mt-2">
+                <span className="text-gray-500">Motif client :</span> {resolveTx.disputeNote}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="label">Réponse / Note admin (optionnel)</label>
+              <textarea
+                className="input resize-none"
+                rows={3}
+                placeholder="Explication de la décision..."
+                value={resolveNote}
+                onChange={(e) => setResolveNote(e.target.value)}
+              />
+            </div>
+
+            {resolveError && <p className="text-red-400 text-sm mb-3">{resolveError}</p>}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleResolve('ACCEPTEE')}
+                disabled={resolveLoading}
+                className="btn-success flex-1 text-sm"
+              >
+                ✓ Accepter
+              </button>
+              <button
+                onClick={() => handleResolve('REJETEE')}
+                disabled={resolveLoading}
+                className="btn-danger flex-1 text-sm"
+              >
+                ✗ Rejeter
+              </button>
+              <button
+                type="button"
+                onClick={() => setResolveTx(null)}
+                className="btn-secondary text-sm"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

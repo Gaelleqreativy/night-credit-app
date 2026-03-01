@@ -21,6 +21,7 @@ app.use('/api/import', require('./routes/import'))
 app.use('/api/export', require('./routes/export'))
 app.use('/api/audit', require('./routes/audit'))
 app.use('/api/users', require('./routes/users'))
+app.use('/api/notifications', require('./routes/notifications'))
 
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 

@@ -5,9 +5,12 @@ import StatusBadge from '../../components/StatusBadge'
 import Filters from '../../components/Filters'
 import { useAuth } from '../../context/AuthContext'
 
+const MOYENS = ['ESPECES', 'CB', 'VIREMENT', 'CHEQUE', 'MOBILE_MONEY']
+
 export default function ClientDetail() {
   const { adminUser } = useAuth()
   const isManager = adminUser?.role === 'MANAGER'
+  const isAdmin = adminUser?.role === 'ADMIN'
   const { id } = useParams()
   const [client, setClient] = useState(null)
   const [establishments, setEstablishments] = useState([])
@@ -15,8 +18,15 @@ export default function ClientDetail() {
   const [establishmentId, setEstablishmentId] = useState('')
   const [type, setType] = useState('')
   const [loading, setLoading] = useState(true)
+  const [disputedOnly, setDisputedOnly] = useState(false)
   const [editStatus, setEditStatus] = useState(false)
   const [newStatus, setNewStatus] = useState('')
+
+  // Modal édition transaction
+  const [editTx, setEditTx] = useState(null)
+  const [editForm, setEditForm] = useState({})
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState('')
 
   useEffect(() => {
     api.get('/establishments').then((r) => setEstablishments(r.data))
@@ -40,6 +50,36 @@ export default function ClientDetail() {
     setClient(data)
   }
 
+  function openEditModal(t) {
+    setEditTx(t)
+    setEditError('')
+    setEditForm({
+      date: new Date(t.date).toISOString().split('T')[0],
+      establishmentId: String(t.establishmentId),
+      ticketRef: t.ticketRef || '',
+      notes: t.notes || '',
+      consommation: t.consommation || '',
+      paiement: t.paiement || '',
+      moyenPaiement: t.moyenPaiement || '',
+    })
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault()
+    setEditError('')
+    setEditLoading(true)
+    try {
+      await api.put(`/transactions/${editTx.id}`, editForm)
+      const { data } = await api.get(`/clients/${id}`)
+      setClient(data)
+      setEditTx(null)
+    } catch (err) {
+      setEditError(err.response?.data?.error || 'Erreur')
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
   function exportClient(format) {
     const params = new URLSearchParams({ format })
     if (year) params.set('year', year)
@@ -53,8 +93,13 @@ export default function ClientDetail() {
     if (establishmentId && t.establishmentId !== Number(establishmentId)) return false
     if (type && t.type !== type) return false
     if (year && new Date(t.date).getFullYear() !== Number(year)) return false
+    if (disputedOnly && !t.disputed) return false
     return true
   }) || []
+
+  const total = client?.transactions?.length || 0
+  const hasActiveFilters = year || establishmentId || type || disputedOnly
+  function resetFilters() { setYear(''); setEstablishmentId(''); setType(''); setDisputedOnly(false) }
 
   if (loading) return <div className="text-gray-500 text-center py-20">Chargement...</div>
   if (!client) return <div className="text-red-400 text-center py-20">Client introuvable</div>
@@ -112,12 +157,36 @@ export default function ClientDetail() {
       </div>
 
       {/* Filtres */}
-      <Filters year={year} setYear={setYear} establishmentId={establishmentId} setEstablishmentId={setEstablishmentId} establishments={establishments} type={type} setType={setType} />
+      <div className="card space-y-3">
+        <Filters year={year} setYear={setYear} establishmentId={establishmentId} setEstablishmentId={setEstablishmentId} establishments={establishments} type={type} setType={setType} />
+        <div className="flex items-center gap-5 flex-wrap">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={disputedOnly}
+              onChange={(e) => setDisputedOnly(e.target.checked)}
+              className="w-4 h-4 accent-red-500"
+            />
+            <span className="text-sm text-red-300/80">Contestées seulement</span>
+          </label>
+          {hasActiveFilters && (
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+              ✕ Réinitialiser
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Compteur */}
+      <p className="text-sm text-gray-500">
+        {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+        {filtered.length !== total && ` (sur ${total})`}
+      </p>
 
       {/* Transactions */}
       <div className="card p-0 overflow-hidden">
         <div className="px-4 py-3 border-b border-night-800 flex items-center justify-between">
-          <h2 className="font-semibold">Transactions ({filtered.length})</h2>
+          <h2 className="font-semibold">Transactions</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -150,9 +219,26 @@ export default function ClientDetail() {
                   <td className="px-4 py-2 text-right text-emerald-300">{t.paiement ? fmt(t.paiement) : '-'}</td>
                   <td className="px-4 py-2 hidden lg:table-cell text-gray-400">{t.moyenPaiement || '-'}</td>
                   <td className="px-4 py-2 hidden lg:table-cell text-gray-400 max-w-xs truncate">{t.notes || '-'}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2 text-right whitespace-nowrap">
                     {t.disputed && <span className="badge-red badge text-xs mr-1">Contesté</span>}
-                    {!isManager && <button onClick={() => deleteTransaction(t.id)} className="text-red-500 hover:text-red-300 text-xs">✕</button>}
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => openEditModal(t)}
+                          className="text-indigo-400 hover:text-indigo-200 text-xs mr-2"
+                          title="Modifier"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => deleteTransaction(t.id)}
+                          className="text-red-500 hover:text-red-300 text-xs"
+                          title="Supprimer"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -160,6 +246,111 @@ export default function ClientDetail() {
           </table>
         </div>
       </div>
+
+      {/* Modal édition transaction */}
+      {editTx && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-1">Modifier la transaction</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              {editTx.type === 'CONSOMMATION' ? '🍾 Consommation' : '💳 Paiement'} — ID #{editTx.id}
+            </p>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Date</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={editForm.date}
+                    onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="label">Établissement</label>
+                  <select
+                    className="input"
+                    value={editForm.establishmentId}
+                    onChange={(e) => setEditForm({ ...editForm, establishmentId: e.target.value })}
+                  >
+                    {establishments.map((e) => (
+                      <option key={e.id} value={e.id}>{e.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {editTx.type === 'CONSOMMATION' && (
+                <div>
+                  <label className="label">Montant consommation (FCFA)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={editForm.consommation}
+                    onChange={(e) => setEditForm({ ...editForm, consommation: e.target.value })}
+                    required
+                  />
+                </div>
+              )}
+
+              {editTx.type === 'PAIEMENT' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Montant paiement (FCFA)</label>
+                    <input
+                      type="number"
+                      className="input"
+                      value={editForm.paiement}
+                      onChange={(e) => setEditForm({ ...editForm, paiement: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Moyen de paiement</label>
+                    <select
+                      className="input"
+                      value={editForm.moyenPaiement}
+                      onChange={(e) => setEditForm({ ...editForm, moyenPaiement: e.target.value })}
+                    >
+                      {MOYENS.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="label">Réf. ticket</label>
+                <input
+                  className="input"
+                  value={editForm.ticketRef}
+                  onChange={(e) => setEditForm({ ...editForm, ticketRef: e.target.value })}
+                  placeholder="Optionnel"
+                />
+              </div>
+
+              <div>
+                <label className="label">Notes</label>
+                <input
+                  className="input"
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  placeholder="Optionnel"
+                />
+              </div>
+
+              {editError && <p className="text-red-400 text-sm">{editError}</p>}
+
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="btn-primary flex-1" disabled={editLoading}>
+                  {editLoading ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setEditTx(null)}>Annuler</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
