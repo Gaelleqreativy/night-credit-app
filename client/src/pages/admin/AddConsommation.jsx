@@ -16,6 +16,10 @@ export default function AddConsommation() {
     notes: '',
   })
   const [photo, setPhoto] = useState(null)
+  const selectedClient = clients.find((c) => String(c.id) === String(form.clientId))
+  const creditAlert = selectedClient?.creditLimit && form.consommation
+    ? (selectedClient.solde + Number(form.consommation)) > selectedClient.creditLimit
+    : false
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
@@ -92,6 +96,15 @@ export default function AddConsommation() {
           <label className="label">Notes (visible comptabilité uniquement)</label>
           <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Table VIP, client régulier..." />
         </div>
+        {creditAlert && (
+          <div className="bg-amber-900/40 border border-amber-600 rounded-lg px-3 py-2">
+            <p className="text-amber-300 text-sm font-medium">⚠️ Dépassement du plafond de crédit</p>
+            <p className="text-amber-200/70 text-xs mt-0.5">
+              Solde actuel: {Number(selectedClient.solde).toLocaleString('fr-FR')} FCFA + {Number(form.consommation).toLocaleString('fr-FR')} FCFA = {(selectedClient.solde + Number(form.consommation)).toLocaleString('fr-FR')} FCFA
+              (plafond: {Number(selectedClient.creditLimit).toLocaleString('fr-FR')} FCFA)
+            </p>
+          </div>
+        )}
         {error && <p className="text-red-400 text-sm">{error}</p>}
         {success && <p className="text-emerald-400 text-sm">{success}</p>}
         <div className="flex gap-2">

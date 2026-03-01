@@ -26,15 +26,17 @@ model UserEstablishment {
 }
 
 model User {
-  id             Int                 @id @default(autoincrement())
-  email          String              @unique
-  password       String
-  name           String
-  role           String              @default("COMPTABLE") // "ADMIN" | "COMPTABLE"
-  establishments UserEstablishment[]
-  transactions   Transaction[]
-  auditLogs      AuditLog[]
-  createdAt      DateTime            @default(now())
+  id                Int                 @id @default(autoincrement())
+  email             String              @unique
+  password          String
+  name              String
+  role              String              @default("COMPTABLE") // "ADMIN" | "COMPTABLE"
+  establishments    UserEstablishment[]
+  transactions      Transaction[]
+  auditLogs         AuditLog[]
+  loginAttempts     Int                 @default(0)
+  loginLockedUntil  DateTime?
+  createdAt         DateTime            @default(now())
 }
 
 model AuditLog {
@@ -49,15 +51,18 @@ model AuditLog {
 }
 
 model Client {
-  id           Int           @id @default(autoincrement())
-  phone        String        @unique
-  pin          String
-  firstName    String
-  lastName     String
-  creditLimit  Float?
-  status       String        @default("EN_COURS") // "EN_COURS" | "SOLDE" | "EN_RETARD"
-  transactions Transaction[]
-  createdAt    DateTime      @default(now())
+  id               Int           @id @default(autoincrement())
+  phone            String        @unique
+  pin              String
+  firstName        String
+  lastName         String
+  creditLimit      Float?
+  status           String        @default("EN_COURS") // "EN_COURS" | "SOLDE" | "EN_RETARD"
+  pinMustChange    Boolean       @default(false)
+  loginAttempts    Int           @default(0)
+  loginLockedUntil DateTime?
+  transactions     Transaction[]
+  createdAt        DateTime      @default(now())
 }
 
 model Transaction {

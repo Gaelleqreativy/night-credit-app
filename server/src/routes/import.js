@@ -79,7 +79,7 @@ router.post('/', authAdmin, uploadExcel.single('file'), async (req, res) => {
         if (!client) {
           const hashedPin = await bcrypt.hash(PIN_DEFAULT, 10)
           client = await prisma.client.create({
-            data: { phone: String(telVal), firstName: String(prenom || ''), lastName: String(nomVal), pin: hashedPin },
+            data: { phone: String(telVal), firstName: String(prenom || ''), lastName: String(nomVal), pin: hashedPin, pinMustChange: true },
           })
           results.clientsCreated++
         }

@@ -18,8 +18,13 @@ export default function ClientLogin() {
     setLoading(true)
     try {
       const { data } = await api.post('/auth/client-login', { phone, pin })
-      loginClient(data.token, data.client)
-      navigate('/client/dashboard')
+      loginClient(data.client)
+      // Si le PIN doit être changé, rediriger vers la page PIN
+      if (data.client.pinMustChange) {
+        navigate('/client/pin')
+      } else {
+        navigate('/client/dashboard')
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Numéro ou PIN incorrect')
     } finally {
@@ -63,7 +68,11 @@ export default function ClientLogin() {
               required
             />
           </div>
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && (
+            <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? 'Connexion...' : 'Accéder à mon compte'}
           </button>

@@ -86,7 +86,7 @@ router.post('/', authAdmin, requireNotManager, async (req, res) => {
   try {
     const hashedPin = await bcrypt.hash(pin, 10)
     const client = await prisma.client.create({
-      data: { firstName, lastName, phone, pin: hashedPin, creditLimit: creditLimit ? Number(creditLimit) : null },
+      data: { firstName, lastName, phone, pin: hashedPin, creditLimit: creditLimit ? Number(creditLimit) : null, pinMustChange: true },
     })
     await logAudit(req.user.id, 'CREATE', 'Client', client.id, { firstName, lastName, phone })
     const { pin: _, ...result } = client
@@ -120,7 +120,7 @@ router.put('/:id/reset-pin', authAdmin, requireNotManager, async (req, res) => {
     return res.status(400).json({ error: 'PIN doit être 4 chiffres' })
   try {
     const hashedPin = await bcrypt.hash(newPin, 10)
-    await prisma.client.update({ where: { id: Number(req.params.id) }, data: { pin: hashedPin } })
+    await prisma.client.update({ where: { id: Number(req.params.id) }, data: { pin: hashedPin, pinMustChange: true } })
     await logAudit(req.user.id, 'UPDATE', 'Client', Number(req.params.id), { action: 'reset_pin' })
     res.json({ message: 'PIN réinitialisé' })
   } catch (e) {
@@ -139,7 +139,7 @@ router.put('/me/pin', authClient, async (req, res) => {
   if (!valid) return res.status(401).json({ error: 'PIN actuel incorrect' })
 
   const hashedPin = await bcrypt.hash(newPin, 10)
-  await prisma.client.update({ where: { id: req.client.id }, data: { pin: hashedPin } })
+  await prisma.client.update({ where: { id: req.client.id }, data: { pin: hashedPin, pinMustChange: false } })
   res.json({ message: 'PIN modifié avec succès' })
 })
 
