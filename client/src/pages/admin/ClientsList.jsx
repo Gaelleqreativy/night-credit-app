@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import { useAuth } from '../../context/AuthContext'
@@ -8,8 +8,12 @@ export default function ClientsList() {
   const { adminUser } = useAuth()
   const isManager = adminUser?.role === 'MANAGER'
   const [clients, setClients] = useState([])
+  const [establishments, setEstablishments] = useState([])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
+  const [establishmentId, setEstablishmentId] = useState('')
+  const [withDebt, setWithDebt] = useState(false)
+  const [overLimit, setOverLimit] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const navigate = useNavigate()
@@ -18,12 +22,17 @@ export default function ClientsList() {
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
+  useEffect(() => {
+    api.get('/establishments').then((r) => setEstablishments(r.data))
+  }, [])
+
   async function fetchClients() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
       if (status) params.set('status', status)
+      if (establishmentId) params.set('establishmentId', establishmentId)
       const { data } = await api.get(`/clients?${params}`)
       setClients(data)
     } finally {
@@ -31,7 +40,14 @@ export default function ClientsList() {
     }
   }
 
-  useEffect(() => { fetchClients() }, [search, status])
+  useEffect(() => { fetchClients() }, [search, status, establishmentId])
+
+  // Filtres client-side
+  const filtered = clients.filter((c) => {
+    if (withDebt && c.solde <= 0) return false
+    if (overLimit && (!c.creditLimit || c.solde <= c.creditLimit)) return false
+    return true
+  })
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -52,9 +68,9 @@ export default function ClientsList() {
     }
   }
 
-  function fmt(n) {
-    return Number(n || 0).toLocaleString('fr-FR') + ' FCFA'
-  }
+  function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }
+  function resetFilters() { setSearch(''); setStatus(''); setEstablishmentId(''); setWithDebt(false); setOverLimit(false) }
+  const hasActiveFilters = search || status || establishmentId || withDebt || overLimit
 
   return (
     <div className="space-y-4">
@@ -64,21 +80,63 @@ export default function ClientsList() {
       </div>
 
       {/* Filtres */}
-      <div className="flex gap-3 flex-wrap">
-        <input
-          type="text"
-          placeholder="Rechercher (nom, téléphone)..."
-          className="input flex-1 min-w-48"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">Tous les statuts</option>
-          <option value="EN_COURS">En cours</option>
-          <option value="EN_RETARD">En retard</option>
-          <option value="SOLDE">Soldé</option>
-        </select>
+      <div className="card space-y-3">
+        <div className="flex gap-3 flex-wrap">
+          <input
+            type="text"
+            placeholder="Rechercher (nom, téléphone)..."
+            className="input flex-1 min-w-48"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select className="input w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">Tous les statuts</option>
+            <option value="EN_COURS">En cours</option>
+            <option value="EN_RETARD">En retard</option>
+            <option value="SOLDE">Soldé</option>
+          </select>
+          <select className="input w-auto" value={establishmentId} onChange={(e) => setEstablishmentId(e.target.value)}>
+            <option value="">Tous les établissements</option>
+            {establishments.map((e) => (
+              <option key={e.id} value={e.id}>{e.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-5 flex-wrap">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={withDebt}
+              onChange={(e) => setWithDebt(e.target.checked)}
+              className="w-4 h-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-300">Avec dette uniquement</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={overLimit}
+              onChange={(e) => setOverLimit(e.target.checked)}
+              className="w-4 h-4 accent-amber-500"
+            />
+            <span className="text-sm text-amber-300/80">Plafond dépassé</span>
+          </label>
+          {hasActiveFilters && (
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+              ✕ Réinitialiser les filtres
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Compteur résultats */}
+      {!loading && (
+        <p className="text-sm text-gray-500">
+          {filtered.length} client{filtered.length !== 1 ? 's' : ''}
+          {filtered.length !== clients.length && ` (sur ${clients.length})`}
+        </p>
+      )}
 
       {/* Tableau */}
       <div className="card p-0 overflow-hidden">
@@ -94,19 +152,27 @@ export default function ClientsList() {
           <tbody>
             {loading ? (
               <tr><td colSpan={4} className="text-center py-8 text-gray-500">Chargement...</td></tr>
-            ) : clients.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8 text-gray-500">Aucun client trouvé</td></tr>
-            ) : clients.map((c) => (
+            ) : filtered.map((c) => (
               <tr
                 key={c.id}
                 className="border-b border-night-800/50 hover:bg-night-800/30 cursor-pointer"
                 onClick={() => navigate(`/admin/clients/${c.id}`)}
               >
-                <td className="px-4 py-3 font-medium">{c.lastName} {c.firstName}</td>
+                <td className="px-4 py-3 font-medium">
+                  {c.lastName} {c.firstName}
+                  {c.creditLimit && c.solde > c.creditLimit && (
+                    <span className="ml-2 text-xs text-amber-400">⚠️ plafond</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{c.phone}</td>
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                <td className="px-4 py-3 text-right font-semibold text-red-300">
-                  {c.solde > 0 ? fmt(c.solde) : <span className="text-emerald-400">Soldé</span>}
+                <td className="px-4 py-3 text-right font-semibold">
+                  {c.solde > 0
+                    ? <span className="text-red-300">{fmt(c.solde)}</span>
+                    : <span className="text-emerald-400">Soldé</span>
+                  }
                 </td>
               </tr>
             ))}

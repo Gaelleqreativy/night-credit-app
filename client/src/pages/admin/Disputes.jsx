@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 
 export default function DisputesPage() {
   const [disputes, setDisputes] = useState([])
   const [loading, setLoading] = useState(true)
+
+  // Filtres
+  const [search, setSearch] = useState('')
+  const [establishmentId, setEstablishmentId] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [statusFilter, setStatusFilter] = useState('OUVERTE')
 
   async function fetchDisputes() {
     setLoading(true)
@@ -20,75 +27,169 @@ export default function DisputesPage() {
     fetchDisputes()
   }
 
-  const open = disputes.filter((d) => d.disputeStatus === 'OUVERTE')
-  const resolved = disputes.filter((d) => d.disputeStatus === 'RESOLUE')
+  // Etablissements distincts
+  const establishments = useMemo(() => {
+    const map = new Map()
+    disputes.forEach((d) => { if (d.establishment) map.set(d.establishment.id, d.establishment) })
+    return Array.from(map.values())
+  }, [disputes])
+
+  // Filtrage
+  const filtered = useMemo(() => {
+    return disputes.filter((d) => {
+      if (statusFilter !== 'TOUTES' && d.disputeStatus !== statusFilter) return false
+      if (search) {
+        const q = search.toLowerCase()
+        const name = `${d.client?.lastName} ${d.client?.firstName}`.toLowerCase()
+        if (!name.includes(q)) return false
+      }
+      if (establishmentId && String(d.establishment?.id) !== String(establishmentId)) return false
+      if (dateFrom && new Date(d.date) < new Date(dateFrom)) return false
+      if (dateTo && new Date(d.date) > new Date(dateTo + 'T23:59:59')) return false
+      return true
+    })
+  }, [disputes, search, establishmentId, dateFrom, dateTo, statusFilter])
+
+  const open = filtered.filter((d) => d.disputeStatus === 'OUVERTE')
+  const resolved = filtered.filter((d) => d.disputeStatus === 'RESOLUE')
+  const totalOpen = disputes.filter((d) => d.disputeStatus === 'OUVERTE').length
 
   function fmtDate(d) { return new Date(d).toLocaleDateString('fr-FR') }
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }
+  function resetFilters() { setSearch(''); setEstablishmentId(''); setDateFrom(''); setDateTo(''); setStatusFilter('OUVERTE') }
+  const hasActiveFilters = search || establishmentId || dateFrom || dateTo || statusFilter !== 'OUVERTE'
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <h1 className="text-2xl font-bold">Contestations</h1>
+    <div className="space-y-5 max-w-4xl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Contestations</h1>
+        {totalOpen > 0 && <span className="badge badge-red text-sm">{totalOpen} ouverte{totalOpen > 1 ? 's' : ''}</span>}
+      </div>
+
+      {/* Filtres */}
+      <div className="card space-y-3">
+        <div className="flex gap-3 flex-wrap">
+          <input
+            type="text"
+            placeholder="Rechercher un client..."
+            className="input flex-1 min-w-40"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select className="input w-auto" value={establishmentId} onChange={(e) => setEstablishmentId(e.target.value)}>
+            <option value="">Tous les établissements</option>
+            {establishments.map((e) => (
+              <option key={e.id} value={e.id}>{e.name}</option>
+            ))}
+          </select>
+          <select className="input w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="OUVERTE">Ouvertes</option>
+            <option value="RESOLUE">Résolues</option>
+            <option value="TOUTES">Toutes</option>
+          </select>
+        </div>
+
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-500 whitespace-nowrap">Du</label>
+            <input type="date" className="input w-auto text-sm" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-500 whitespace-nowrap">Au</label>
+            <input type="date" className="input w-auto text-sm" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          {hasActiveFilters && (
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+              ✕ Réinitialiser
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!loading && (
+        <p className="text-sm text-gray-500">
+          {filtered.length} contestation{filtered.length !== 1 ? 's' : ''}
+          {filtered.length !== disputes.length && ` (sur ${disputes.length})`}
+        </p>
+      )}
 
       {/* Ouvertes */}
-      <div className="card p-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-night-800 flex items-center gap-2">
-          <h2 className="font-semibold">Contestations ouvertes</h2>
-          {open.length > 0 && <span className="badge badge-red">{open.length}</span>}
+      {(statusFilter === 'OUVERTE' || statusFilter === 'TOUTES') && (
+        <div className="card p-0 overflow-hidden">
+          <div className="px-4 py-3 border-b border-night-800 flex items-center gap-2">
+            <h2 className="font-semibold">Contestations ouvertes</h2>
+            {open.length > 0 && <span className="badge badge-red">{open.length}</span>}
+          </div>
+          {loading ? (
+            <p className="text-center py-6 text-gray-500">Chargement...</p>
+          ) : open.length === 0 ? (
+            <p className="text-center py-6 text-gray-500">Aucune contestation ouverte</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="border-b border-night-800">
+                <tr className="text-gray-500">
+                  <th className="text-left px-4 py-2">Date</th>
+                  <th className="text-left px-4 py-2">Client</th>
+                  <th className="text-left px-4 py-2 hidden md:table-cell">Établissement</th>
+                  <th className="text-right px-4 py-2">Montant</th>
+                  <th className="text-left px-4 py-2">Motif</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {open.map((d) => (
+                  <tr key={d.id} className="border-b border-night-800/50 hover:bg-night-800/20">
+                    <td className="px-4 py-3 whitespace-nowrap">{fmtDate(d.date)}</td>
+                    <td className="px-4 py-3">
+                      <Link to={`/admin/clients/${d.clientId}`} className="text-indigo-400 hover:underline">
+                        {d.client?.lastName} {d.client?.firstName}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{d.establishment?.name}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
+                    <td className="px-4 py-3 text-yellow-300 text-sm max-w-xs truncate">{d.disputeNote}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => resolve(d.id)} className="btn-success text-xs px-3 py-1 whitespace-nowrap">
+                        Résoudre
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-        {loading ? (
-          <p className="text-center py-6 text-gray-500">Chargement...</p>
-        ) : open.length === 0 ? (
-          <p className="text-center py-6 text-gray-500">Aucune contestation ouverte</p>
-        ) : (
+      )}
+
+      {/* Résolues */}
+      {(statusFilter === 'RESOLUE' || statusFilter === 'TOUTES') && resolved.length > 0 && (
+        <div className="card p-0 overflow-hidden">
+          <div className="px-4 py-3 border-b border-night-800">
+            <h2 className="font-semibold text-gray-400">Contestations résolues ({resolved.length})</h2>
+          </div>
           <table className="w-full text-sm">
             <thead className="border-b border-night-800">
               <tr className="text-gray-500">
                 <th className="text-left px-4 py-2">Date</th>
                 <th className="text-left px-4 py-2">Client</th>
-                <th className="text-left px-4 py-2">Établissement</th>
+                <th className="text-left px-4 py-2 hidden md:table-cell">Établissement</th>
                 <th className="text-right px-4 py-2">Montant</th>
                 <th className="text-left px-4 py-2">Motif</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
-              {open.map((d) => (
-                <tr key={d.id} className="border-b border-night-800/50 hover:bg-night-800/20">
-                  <td className="px-4 py-3">{fmtDate(d.date)}</td>
-                  <td className="px-4 py-3">
+              {resolved.map((d) => (
+                <tr key={d.id} className="border-b border-night-800/50 opacity-60">
+                  <td className="px-4 py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
+                  <td className="px-4 py-2">
                     <Link to={`/admin/clients/${d.clientId}`} className="text-indigo-400 hover:underline">
                       {d.client?.lastName} {d.client?.firstName}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-400">{d.establishment?.name}</td>
-                  <td className="px-4 py-3 text-right">{d.consommation ? fmt(d.consommation) : fmt(d.paiement)}</td>
-                  <td className="px-4 py-3 text-yellow-300 text-sm">{d.disputeNote}</td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => resolve(d.id)} className="btn-success text-xs px-3 py-1">
-                      Résoudre
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Résolues */}
-      {resolved.length > 0 && (
-        <div className="card p-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-night-800">
-            <h2 className="font-semibold text-gray-400">Contestations résolues ({resolved.length})</h2>
-          </div>
-          <table className="w-full text-sm">
-            <tbody>
-              {resolved.map((d) => (
-                <tr key={d.id} className="border-b border-night-800/50 opacity-60">
-                  <td className="px-4 py-2">{fmtDate(d.date)}</td>
-                  <td className="px-4 py-2">{d.client?.lastName} {d.client?.firstName}</td>
-                  <td className="px-4 py-2 text-gray-500">{d.disputeNote}</td>
+                  <td className="px-4 py-2 text-gray-500 hidden md:table-cell">{d.establishment?.name}</td>
+                  <td className="px-4 py-2 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
+                  <td className="px-4 py-2 text-gray-400 text-sm max-w-xs truncate">{d.disputeNote}</td>
                   <td className="px-4 py-2"><span className="badge badge-green">Résolu</span></td>
                 </tr>
               ))}

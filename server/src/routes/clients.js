@@ -17,7 +17,7 @@ async function getClientBalance(clientId) {
 // GET /api/clients — liste avec solde
 router.get('/', authAdmin, async (req, res) => {
   try {
-    const { search, status } = req.query
+    const { search, status, establishmentId } = req.query
     const where = {}
     if (status) where.status = status
     if (search) {
@@ -28,8 +28,13 @@ router.get('/', authAdmin, async (req, res) => {
       ]
     }
 
+    const estabId = establishmentId ? Number(establishmentId) : null
     if (req.user.role === 'MANAGER' && req.user.establishmentIds?.length) {
-      where.transactions = { some: { establishmentId: { in: req.user.establishmentIds } } }
+      const allowed = req.user.establishmentIds
+      const ids = estabId && allowed.includes(estabId) ? [estabId] : allowed
+      where.transactions = { some: { establishmentId: { in: ids } } }
+    } else if (estabId) {
+      where.transactions = { some: { establishmentId: estabId } }
     }
 
     const clients = await prisma.client.findMany({
