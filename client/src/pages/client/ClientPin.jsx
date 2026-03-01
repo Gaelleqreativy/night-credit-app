@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Lock } from 'lucide-react'
 import ClientLayout from '../../components/ClientLayout'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -40,7 +41,7 @@ export default function ClientPin() {
       <div className="space-y-4">
         {forced && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <p className="text-amber-700 font-semibold text-sm">🔐 Changement de PIN requis</p>
+            <p className="text-amber-700 font-semibold text-sm flex items-center gap-1.5"><Lock size={15} />Changement de PIN requis</p>
             <p className="text-amber-600 text-xs mt-1">
               Pour sécuriser votre compte, vous devez choisir un nouveau PIN personnel avant de continuer.
             </p>

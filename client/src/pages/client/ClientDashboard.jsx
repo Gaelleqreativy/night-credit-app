@@ -3,6 +3,7 @@ import ClientLayout from '../../components/ClientLayout'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
+import { CheckCircle2, ClipboardList, CheckCircle, XCircle, Clock, Camera, AlertTriangle, X } from 'lucide-react'
 
 // Retourne uniquement les transactions qui composent le solde actuel
 // (tout ce qui s'est passé depuis la dernière fois que le solde était à 0)
@@ -77,7 +78,7 @@ export default function ClientDashboard() {
           /* ── CAS 1 : Solde à zéro ── */
           <div className="space-y-4">
             <div className="rounded-2xl p-6 text-center bg-emerald-50 border border-emerald-200">
-              <p className="text-4xl mb-2">✓</p>
+              <div className="flex justify-center mb-2"><CheckCircle2 size={40} className="text-emerald-600" /></div>
               <p className="text-emerald-700 font-semibold text-lg">Votre compte est à jour</p>
               <p className="text-gray-500 text-sm mt-1">Aucune dette en cours</p>
               <div className="mt-3">
@@ -89,7 +90,7 @@ export default function ClientDashboard() {
               onClick={() => setShowRecapRequest(true)}
               className="btn-secondary w-full"
             >
-              📋 Demander un récapitulatif
+              <ClipboardList size={15} className="inline mr-1.5" />Demander un récapitulatif
             </button>
           </div>
 
@@ -131,16 +132,16 @@ export default function ClientDashboard() {
                         <div className="mt-1">
                           {t.disputeStatus === 'ACCEPTEE' ? (
                             <div>
-                              <span className="text-xs text-emerald-600">✓ Contestation acceptée</span>
+                              <span className="text-xs text-emerald-600 flex items-center gap-1"><CheckCircle size={12} /> Contestation acceptée</span>
                               {t.resolveNote && <p className="text-xs text-gray-500 mt-0.5">{t.resolveNote}</p>}
                             </div>
                           ) : t.disputeStatus === 'REJETEE' ? (
                             <div>
-                              <span className="text-xs text-red-600">✗ Contestation rejetée</span>
+                              <span className="text-xs text-red-600 flex items-center gap-1"><XCircle size={12} /> Contestation rejetée</span>
                               {t.resolveNote && <p className="text-xs text-gray-500 mt-0.5">{t.resolveNote}</p>}
                             </div>
                           ) : (
-                            <span className="text-xs text-amber-600">⏳ En cours de traitement</span>
+                            <span className="text-xs text-amber-600 flex items-center gap-1"><Clock size={12} /> En cours de traitement</span>
                           )}
                         </div>
                       )}
@@ -159,7 +160,7 @@ export default function ClientDashboard() {
                             className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
                             title="Voir le ticket"
                           >
-                            📷
+                            <Camera size={14} />
                           </button>
                         )}
                         {t.type === 'CONSOMMATION' && !t.disputed && (
@@ -168,7 +169,7 @@ export default function ClientDashboard() {
                             className="text-xs text-amber-600 hover:text-amber-800 transition-colors"
                             title="Contester"
                           >
-                            ⚠️
+                            <AlertTriangle size={14} />
                           </button>
                         )}
                       </div>
@@ -227,7 +228,7 @@ export default function ClientDashboard() {
               className="absolute -top-10 right-0 text-white text-2xl leading-none"
               onClick={() => setPhotoModal(null)}
             >
-              ✕
+              <X size={18} />
             </button>
             <img
               src={photoModal}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
 import { useToast } from '../../context/ToastContext'
+import { CreditCard } from 'lucide-react'
 
 const MOYENS = [
   { value: 'ESPECES', label: 'Espèces' },
@@ -114,7 +115,7 @@ export default function AddPaiement() {
         </div>
         <div className="flex gap-2">
           <button type="submit" className="btn-success flex-1" disabled={loading}>
-            {loading ? 'Enregistrement...' : '💳 Enregistrer le paiement'}
+            {loading ? 'Enregistrement...' : <><CreditCard size={14} className="inline mr-1.5" />Enregistrer le paiement</>}
           </button>
           <button type="button" className="btn-secondary" onClick={() => navigate(-1)}>Annuler</button>
         </div>

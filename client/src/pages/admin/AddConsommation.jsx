@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
 import { useToast } from '../../context/ToastContext'
+import { AlertTriangle } from 'lucide-react'
 
 export default function AddConsommation() {
   const [searchParams] = useSearchParams()
@@ -96,7 +97,7 @@ export default function AddConsommation() {
         </div>
         {creditAlert && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            <p className="text-amber-700 text-sm font-medium">⚠️ Dépassement du plafond de crédit</p>
+            <p className="text-amber-700 text-sm font-medium flex items-center gap-1.5"><AlertTriangle size={14} />Dépassement du plafond de crédit</p>
             <p className="text-amber-600 text-xs mt-0.5">
               Solde actuel: {Number(selectedClient.solde).toLocaleString('fr-FR')} FCFA + {Number(form.consommation).toLocaleString('fr-FR')} FCFA = {(selectedClient.solde + Number(form.consommation)).toLocaleString('fr-FR')} FCFA
               (plafond: {Number(selectedClient.creditLimit).toLocaleString('fr-FR')} FCFA)

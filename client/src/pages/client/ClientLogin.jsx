@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import { Moon, ArrowRight } from 'lucide-react'
 
 export default function ClientLogin() {
   const [phone, setPhone] = useState('')
@@ -36,7 +37,7 @@ export default function ClientLogin() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🌙</div>
+          <div className="flex justify-center mb-2"><Moon size={36} className="text-blue-600" /></div>
           <h1 className="text-2xl font-bold text-blue-600">Night Credit</h1>
           <p className="text-gray-500 text-sm mt-1">Mon espace client</p>
         </div>
@@ -79,8 +80,8 @@ export default function ClientLogin() {
         </form>
 
         <div className="mt-4 text-center">
-          <a href="/admin/login" className="text-xs text-gray-500 hover:text-gray-700">
-            → Espace comptabilité
+          <a href="/admin/login" className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1">
+            Espace comptabilité <ArrowRight size={11} />
           </a>
         </div>
       </div>

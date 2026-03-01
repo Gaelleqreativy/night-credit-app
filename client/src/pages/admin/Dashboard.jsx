@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 import { SkeletonStat } from '../../components/Skeleton'
 import { useAuth } from '../../context/AuthContext'
+import { AlertTriangle, ArrowRight, Banknote, CreditCard, UtensilsCrossed, Users } from 'lucide-react'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
@@ -18,7 +19,7 @@ function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
     <div className="card hover:shadow-md transition-shadow group">
       <div className="flex items-start justify-between">
         <p className="text-sm text-gray-500">{label}</p>
-        {icon && <span className="text-xl opacity-40 group-hover:opacity-70 transition-opacity">{icon}</span>}
+        {icon && <span className="opacity-30 group-hover:opacity-60 transition-opacity">{icon}</span>}
       </div>
       <p className={`text-2xl font-bold mt-2 ${colorMap[color]}`}>{value}</p>
       {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
@@ -57,9 +58,9 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
-          <StatCard label="Solde total dû" value={fmt(totalDu)} color="red" icon="💸" />
-          <StatCard label="Consommations" value={fmt(totalConso)} color="indigo" icon="🍾" />
-          <StatCard label="Encaissé" value={fmt(totalPaiement)} color="emerald" icon="💳" />
+          <StatCard label="Solde total dû" value={fmt(totalDu)} color="red" icon={<Banknote size={18} />} />
+          <StatCard label="Consommations" value={fmt(totalConso)} color="indigo" icon={<UtensilsCrossed size={18} />} />
+          <StatCard label="Encaissé" value={fmt(totalPaiement)} color="emerald" icon={<CreditCard size={18} />} />
         </div>
       )}
 
@@ -167,9 +168,9 @@ export default function AdminDashboard() {
       {stats?.contestationsOuvertes > 0 && (
         <Link to="/admin/disputes" className="block">
           <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-red-700 text-sm flex items-center gap-2 hover:bg-red-100 transition-colors">
-            <span>⚠️</span>
+            <AlertTriangle size={15} className="shrink-0" />
             <span>{stats.contestationsOuvertes} contestation(s) ouverte(s) en attente de traitement</span>
-            <span className="ml-auto text-xs underline">Voir →</span>
+            <span className="ml-auto flex items-center gap-1 text-xs underline">Voir <ArrowRight size={12} /></span>
           </div>
         </Link>
       )}
@@ -181,10 +182,10 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total dû" value={fmt(stats?.totalDu)} color="red" icon="💸" />
-          <StatCard label="Total consommations" value={fmt(stats?.totalConso)} color="indigo" icon="🍾" />
-          <StatCard label="Total encaissé" value={fmt(stats?.totalPaiement)} color="emerald" icon="💳" />
-          <StatCard label="Clients actifs" value={stats?.clientsActifs || 0} sub="avec solde > 0" color="yellow" icon="👥" link="/admin/clients" />
+          <StatCard label="Total dû" value={fmt(stats?.totalDu)} color="red" icon={<Banknote size={18} />} />
+          <StatCard label="Total consommations" value={fmt(stats?.totalConso)} color="indigo" icon={<UtensilsCrossed size={18} />} />
+          <StatCard label="Total encaissé" value={fmt(stats?.totalPaiement)} color="emerald" icon={<CreditCard size={18} />} />
+          <StatCard label="Clients actifs" value={stats?.clientsActifs || 0} sub="avec solde > 0" color="yellow" icon={<Users size={18} />} link="/admin/clients" />
         </div>
       )}
 

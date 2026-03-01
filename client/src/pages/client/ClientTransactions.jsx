@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ClientLayout from '../../components/ClientLayout'
+import { Camera, AlertTriangle } from 'lucide-react'
 import Filters from '../../components/Filters'
 import api from '../../api/axios'
 
@@ -116,8 +117,8 @@ export default function ClientTransactions() {
                     )}
                     <div className="flex gap-2 mt-1 justify-end items-center">
                       {t.ticketPhotoUrl && (
-                        <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600">
-                          📷 Ticket
+                        <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 flex items-center gap-1">
+                          <Camera size={13} />Ticket
                         </a>
                       )}
                       {!t.disputed && t.type === 'CONSOMMATION' && (
@@ -125,7 +126,7 @@ export default function ClientTransactions() {
                           onClick={() => setDisputeModal(t.id)}
                           className="text-xs text-amber-600 hover:text-amber-800"
                         >
-                          ⚠️ Contester
+                          <AlertTriangle size={13} className="inline mr-1" />Contester
                         </button>
                       )}
                     </div>

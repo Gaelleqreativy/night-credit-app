@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import api from '../../api/axios'
+import { Download } from 'lucide-react'
 
 export default function ImportPage() {
   const [file, setFile] = useState(null)
@@ -86,7 +87,7 @@ export default function ImportPage() {
           }}
           className="btn-secondary text-sm"
         >
-          ⬇️ Télécharger le template Excel
+          <Download size={14} className="inline mr-1.5" />Télécharger le template Excel
         </button>
       </div>
 

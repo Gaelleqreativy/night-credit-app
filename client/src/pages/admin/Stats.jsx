@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import api from '../../api/axios'
+import { Download } from 'lucide-react'
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
@@ -39,7 +40,7 @@ export default function StatsPage() {
             ))}
           </select>
           <button onClick={() => window.open(`/api/export/global?format=xlsx&year=${year}`, '_blank')} className="btn-secondary text-sm">
-            ⬇️ Export global Excel
+            <Download size={14} className="inline mr-1.5" />Export global Excel
           </button>
         </div>
       </div>

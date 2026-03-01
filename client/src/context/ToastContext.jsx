@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { Check, X, Info, AlertTriangle } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
@@ -35,31 +36,34 @@ const STYLES = {
 }
 
 const ICONS = {
-  success: '✓',
-  error: '✕',
-  info: 'ℹ',
-  warning: '⚠️',
+  success: Check,
+  error: X,
+  info: Info,
+  warning: AlertTriangle,
 }
 
 function ToastContainer({ toasts, onRemove }) {
   if (toasts.length === 0) return null
   return (
     <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl pointer-events-auto animate-slide-in ${STYLES[t.type] || STYLES.info}`}
-        >
-          <span className="text-sm font-bold shrink-0 mt-0.5">{ICONS[t.type]}</span>
-          <p className="text-sm flex-1">{t.message}</p>
-          <button
-            onClick={() => onRemove(t.id)}
-            className="text-current opacity-50 hover:opacity-100 text-lg leading-none shrink-0"
+      {toasts.map((t) => {
+        const Icon = ICONS[t.type] || Info
+        return (
+          <div
+            key={t.id}
+            className={`flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl pointer-events-auto animate-slide-in ${STYLES[t.type] || STYLES.info}`}
           >
-            ×
-          </button>
-        </div>
-      ))}
+            <Icon size={15} className="shrink-0 mt-0.5" />
+            <p className="text-sm flex-1">{t.message}</p>
+            <button
+              onClick={() => onRemove(t.id)}
+              className="text-current opacity-50 hover:opacity-100 shrink-0"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }

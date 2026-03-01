@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
+import { X } from 'lucide-react'
 
 export default function UsersPage() {
   const [users, setUsers] = useState([])
@@ -74,7 +75,7 @@ export default function UsersPage() {
                   {u.establishments?.map((e) => e.name).join(', ') || 'Tous'}
                 </td>
                 <td className="px-4 py-3">
-                  <button onClick={() => deleteUser(u.id)} className="text-red-500 hover:text-red-700 text-xs">✕</button>
+                  <button onClick={() => deleteUser(u.id)} className="text-red-500 hover:text-red-700 text-xs"><X size={13} /></button>
                 </td>
               </tr>
             ))}

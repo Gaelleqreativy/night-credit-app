@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const ACTION_COLORS = { CREATE: 'badge-green', UPDATE: 'badge-blue', DELETE: 'badge-red' }
 const ENTITIES = ['Client', 'Transaction', 'User']
@@ -89,7 +90,7 @@ export default function AuditPage() {
           </div>
           {hasActiveFilters && (
             <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
-              ✕ Réinitialiser
+              <X size={11} className="inline mr-1" />Réinitialiser
             </button>
           )}
         </div>
@@ -142,9 +143,9 @@ export default function AuditPage() {
 
         {pages > 1 && (
           <div className="px-4 py-3 border-t border-gray-100 flex gap-2 justify-center">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="btn-secondary text-sm">← Préc.</button>
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="btn-secondary text-sm"><ChevronLeft size={14} className="inline" />Préc.</button>
             <span className="text-gray-500 text-sm py-2">Page {page} / {pages}</span>
-            <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="btn-secondary text-sm">Suiv. →</button>
+            <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="btn-secondary text-sm">Suiv.<ChevronRight size={14} className="inline ml-1" /></button>
           </div>
         )}
       </div>

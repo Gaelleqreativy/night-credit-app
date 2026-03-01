@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
+import { X, Check, XCircle } from 'lucide-react'
 
 export default function DisputesPage() {
   const [disputes, setDisputes] = useState([])
@@ -129,7 +130,7 @@ export default function DisputesPage() {
           </div>
           {hasActiveFilters && (
             <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
-              ✕ Réinitialiser
+              <X size={11} className="inline mr-1" />Réinitialiser
             </button>
           )}
         </div>
@@ -270,14 +271,14 @@ export default function DisputesPage() {
                 disabled={resolveLoading}
                 className="btn-success flex-1 text-sm"
               >
-                ✓ Accepter
+                <Check size={13} className="inline mr-1" />Accepter
               </button>
               <button
                 onClick={() => handleResolve('REJETEE')}
                 disabled={resolveLoading}
                 className="btn-danger flex-1 text-sm"
               >
-                ✗ Rejeter
+                <XCircle size={13} className="inline mr-1" />Rejeter
               </button>
               <button
                 type="button"

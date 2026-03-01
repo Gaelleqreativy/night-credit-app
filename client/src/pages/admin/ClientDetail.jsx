@@ -4,6 +4,7 @@ import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import Filters from '../../components/Filters'
 import { useAuth } from '../../context/AuthContext'
+import { ArrowLeft, Download, CreditCard, AlertTriangle, X, Camera, Pencil, ClipboardList, ChevronDown, ChevronUp, UtensilsCrossed } from 'lucide-react'
 
 const MOYENS = ['ESPECES', 'CB', 'VIREMENT', 'CHEQUE', 'MOBILE_MONEY']
 
@@ -129,15 +130,15 @@ export default function ClientDetail() {
       {/* En-tête */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <Link to="/admin/clients" className="text-gray-500 text-sm hover:text-gray-900">← Retour</Link>
+          <Link to="/admin/clients" className="text-gray-500 text-sm hover:text-gray-900 flex items-center gap-1"><ArrowLeft size={14} /> Retour</Link>
           <h1 className="text-2xl font-bold mt-1">{client.lastName} {client.firstName}</h1>
           <p className="text-gray-500">{client.phone}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm">⬇️ Excel</button>
-          <button onClick={() => exportClient('pdf')} className="btn-secondary text-sm">⬇️ PDF</button>
+          <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> Excel</button>
+          <button onClick={() => exportClient('pdf')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> PDF</button>
           {!isManager && <Link to={`/admin/consommation?clientId=${id}`} className="btn-primary text-sm">+ Consommation</Link>}
-          {!isManager && <Link to={`/admin/paiement?clientId=${id}`} className="btn-success text-sm">💳 Paiement</Link>}
+          {!isManager && <Link to={`/admin/paiement?clientId=${id}`} className="btn-success text-sm flex items-center gap-1.5"><CreditCard size={13} /> Paiement</Link>}
         </div>
       </div>
 
@@ -146,7 +147,7 @@ export default function ClientDetail() {
         <div className={`card ${overLimit ? 'border-red-300' : ''}`}>
           <p className="text-sm text-gray-500">Solde dû</p>
           <p className="text-2xl font-bold text-red-600">{fmt(client.solde)}</p>
-          {overLimit && <p className="text-xs text-red-600 mt-1">⚠️ Plafond dépassé !</p>}
+          {overLimit && <p className="text-xs text-red-600 mt-1 flex items-center gap-1"><AlertTriangle size={11} /> Plafond dépassé !</p>}
         </div>
         <div className="card">
           <p className="text-sm text-gray-500">Total consommé</p>
@@ -188,8 +189,8 @@ export default function ClientDetail() {
             <span className="text-sm text-red-600">Contestées seulement</span>
           </label>
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
-              ✕ Réinitialiser
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto flex items-center gap-1">
+              <X size={11} /> Réinitialiser
             </button>
           )}
         </div>
@@ -230,7 +231,7 @@ export default function ClientDetail() {
                   <td className="px-4 py-2 text-gray-500 hidden md:table-cell">
                     {t.ticketRef || '-'}
                     {t.ticketPhotoUrl && (
-                      <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="ml-2 text-blue-600 text-xs">📷</a>
+                      <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="ml-2 text-blue-600 text-xs"><Camera size={13} /></a>
                     )}
                   </td>
                   <td className="px-4 py-2 text-right text-blue-600">{t.consommation ? fmt(t.consommation) : '-'}</td>
@@ -246,14 +247,14 @@ export default function ClientDetail() {
                           className="text-blue-600 hover:text-blue-800 text-xs mr-2"
                           title="Modifier"
                         >
-                          ✏️
+                          <Pencil size={13} />
                         </button>
                         <button
                           onClick={() => deleteTransaction(t.id)}
                           className="text-red-500 hover:text-red-700 text-xs"
                           title="Supprimer"
                         >
-                          ✕
+                          <X size={13} />
                         </button>
                       </>
                     )}
@@ -272,8 +273,8 @@ export default function ClientDetail() {
             onClick={loadHistory}
             className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold hover:bg-gray-50 transition-colors"
           >
-            <span>📋 Historique des modifications</span>
-            <span className="text-gray-400">{showHistory ? '▲' : '▼'}</span>
+            <span className="flex items-center gap-2"><ClipboardList size={15} /> Historique des modifications</span>
+            {showHistory ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
           </button>
           {showHistory && (
             <div className="border-t border-gray-100">
@@ -324,7 +325,7 @@ export default function ClientDetail() {
           <div className="card w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-1">Modifier la transaction</h2>
             <p className="text-xs text-gray-500 mb-4">
-              {editTx.type === 'CONSOMMATION' ? '🍾 Consommation' : '💳 Paiement'} — ID #{editTx.id}
+              <span className="flex items-center gap-2">{editTx.type === 'CONSOMMATION' ? <UtensilsCrossed size={16} /> : <CreditCard size={16} />}{editTx.type === 'CONSOMMATION' ? 'Consommation' : 'Paiement'} — ID #{editTx.id}</span>
             </p>
             <form onSubmit={handleEditSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">

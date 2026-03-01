@@ -4,10 +4,13 @@ import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import { useAuth } from '../../context/AuthContext'
 import { SkeletonRow } from '../../components/Skeleton'
+import { X, AlertTriangle, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react'
 
 function SortIcon({ field, sortField, sortDir }) {
-  if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>
-  return <span className="text-blue-500 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
+  if (sortField !== field) return <ChevronsUpDown size={13} className="inline ml-1 text-gray-300" />
+  return sortDir === 'asc'
+    ? <ChevronUp size={13} className="inline ml-1 text-blue-500" />
+    : <ChevronDown size={13} className="inline ml-1 text-blue-500" />
 }
 
 export default function ClientsList() {
@@ -153,8 +156,8 @@ export default function ClientsList() {
             <span className="text-sm text-amber-600">Plafond dépassé</span>
           </label>
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
-              ✕ Réinitialiser les filtres
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto flex items-center gap-1">
+              <X size={11} /> Réinitialiser les filtres
             </button>
           )}
         </div>
@@ -200,7 +203,7 @@ export default function ClientsList() {
                 <td className="px-4 py-3 font-medium text-gray-900">
                   {c.lastName} {c.firstName}
                   {c.creditLimit && c.solde > c.creditLimit && (
-                    <span className="ml-2 text-xs text-amber-600">⚠️ plafond</span>
+                    <span className="ml-2 text-xs text-amber-600 inline-flex items-center gap-0.5"><AlertTriangle size={11} /> plafond</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{c.phone}</td>
@@ -223,7 +226,7 @@ export default function ClientsList() {
               onClick={() => setPage((p) => p - 1)}
               className="btn-secondary text-sm disabled:opacity-40"
             >
-              ← Préc.
+              <ChevronLeft size={14} className="inline" /> Préc.
             </button>
             <span className="text-sm text-gray-500">Page {page} / {pages}</span>
             <button
@@ -231,7 +234,7 @@ export default function ClientsList() {
               onClick={() => setPage((p) => p + 1)}
               className="btn-secondary text-sm disabled:opacity-40"
             >
-              Suiv. →
+              Suiv. <ChevronRight size={14} className="inline" />
             </button>
           </div>
         )}
