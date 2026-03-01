@@ -23,7 +23,6 @@ export default function ClientLayout({ children }) {
       <nav className="bg-night-900 border-b border-night-800 px-4 flex gap-1">
         {[
           { to: '/client/dashboard', label: 'Accueil' },
-          { to: '/client/transactions', label: 'Transactions' },
           { to: '/client/pin', label: 'Mon PIN' },
         ].map((item) => (
           <NavLink
