@@ -3,9 +3,10 @@ const prisma = new PrismaClient()
 
 /**
  * Recalcule et met à jour le statut d'un client après chaque transaction
- * - SOLDE : solde = 0
- * - EN_RETARD : solde > 0 ET au moins une transaction de conso > 60 jours sans paiement total
+ * - SOLDE    : solde = 0
+ * - EN_RETARD: solde > 0 ET au moins une conso datant de + de 60 jours
  * - EN_COURS : solde > 0 (par défaut)
+ * Le statut est entièrement recalculé depuis les données (non-sticky).
  */
 async function updateClientStatus(clientId) {
   const transactions = await prisma.transaction.findMany({ where: { clientId } })
@@ -30,12 +31,6 @@ async function updateClientStatus(clientId) {
       (t) => t.type === 'CONSOMMATION' && new Date(t.date) < sixtyDaysAgo
     )
     if (hasOldUnpaid) status = 'EN_RETARD'
-  }
-
-  // Conserver EN_RETARD si passé manuellement, sauf si soldé
-  const client = await prisma.client.findUnique({ where: { id: clientId } })
-  if (client.status === 'EN_RETARD' && status === 'EN_COURS') {
-    status = 'EN_RETARD'
   }
 
   await prisma.client.update({ where: { id: clientId }, data: { status } })

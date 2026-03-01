@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
+import { useToast } from '../../context/ToastContext'
 
 export default function AddConsommation() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { addToast } = useToast()
   const [clients, setClients] = useState([])
   const [establishments, setEstablishments] = useState([])
   const [form, setForm] = useState({
@@ -20,9 +22,7 @@ export default function AddConsommation() {
   const creditAlert = selectedClient?.creditLimit && form.consommation
     ? (selectedClient.solde + Number(form.consommation)) > selectedClient.creditLimit
     : false
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     api.get('/clients').then((r) => setClients(r.data))
@@ -31,21 +31,19 @@ export default function AddConsommation() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError(''); setSuccess('')
     if (!form.clientId || !form.establishmentId || !form.consommation || !form.date)
-      return setError('Veuillez remplir tous les champs obligatoires')
+      return addToast('Veuillez remplir tous les champs obligatoires', 'error')
     setLoading(true)
     try {
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v) })
       if (photo) fd.append('ticketPhoto', photo)
       await api.post('/transactions/consommation', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setSuccess('Consommation enregistrée avec succès !')
-      if (form.clientId) setTimeout(() => navigate(`/admin/clients/${form.clientId}`), 1200)
-      else setForm((f) => ({ ...f, ticketRef: '', consommation: '', notes: '' }))
-      setPhoto(null)
+      addToast('Consommation enregistrée avec succès !', 'success')
+      if (form.clientId) setTimeout(() => navigate(`/admin/clients/${form.clientId}`), 1000)
+      else { setForm((f) => ({ ...f, ticketRef: '', consommation: '', notes: '' })); setPhoto(null) }
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de l\'enregistrement')
+      addToast(err.response?.data?.error || "Erreur lors de l'enregistrement", 'error')
     } finally {
       setLoading(false)
     }
@@ -105,8 +103,6 @@ export default function AddConsommation() {
             </p>
           </div>
         )}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        {success && <p className="text-emerald-400 text-sm">{success}</p>}
         <div className="flex gap-2">
           <button type="submit" className="btn-primary flex-1" disabled={loading}>
             {loading ? 'Enregistrement...' : 'Enregistrer'}

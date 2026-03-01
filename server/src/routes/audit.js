@@ -7,16 +7,30 @@ const prisma = new PrismaClient()
 // GET /api/audit — journal d'audit (ADMIN seulement)
 router.get('/', authAdmin, requireAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 50, action, entity, userId, dateFrom, dateTo } = req.query
+    const { page = 1, limit = 50, action, entity, userId, dateFrom, dateTo, clientId } = req.query
 
-    const where = {}
-    if (action) where.action = action
-    if (entity) where.entity = entity
-    if (userId) where.userId = Number(userId)
-    if (dateFrom || dateTo) {
-      where.createdAt = {}
-      if (dateFrom) where.createdAt.gte = new Date(dateFrom)
-      if (dateTo) where.createdAt.lte = new Date(dateTo + 'T23:59:59')
+    let where = {}
+
+    // Filtre par client : logs sur le client + logs sur ses transactions
+    if (clientId) {
+      const txIds = await prisma.transaction.findMany({
+        where: { clientId: Number(clientId) },
+        select: { id: true },
+      })
+      const txIdList = txIds.map((t) => t.id)
+      where.OR = [
+        { entity: 'Client', entityId: Number(clientId) },
+        { entity: 'Transaction', entityId: { in: txIdList } },
+      ]
+    } else {
+      if (action) where.action = action
+      if (entity) where.entity = entity
+      if (userId) where.userId = Number(userId)
+      if (dateFrom || dateTo) {
+        where.createdAt = {}
+        if (dateFrom) where.createdAt.gte = new Date(dateFrom)
+        if (dateTo) where.createdAt.lte = new Date(dateTo + 'T23:59:59')
+      }
     }
 
     const [logs, total] = await Promise.all([

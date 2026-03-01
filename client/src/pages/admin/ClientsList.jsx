@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import { useAuth } from '../../context/AuthContext'
+import { SkeletonRow } from '../../components/Skeleton'
+
+function SortIcon({ field, sortField, sortDir }) {
+  if (sortField !== field) return <span className="text-night-700 ml-1">↕</span>
+  return <span className="text-indigo-400 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
+}
 
 export default function ClientsList() {
   const { adminUser } = useAuth()
@@ -15,6 +21,10 @@ export default function ClientsList() {
   const [withDebt, setWithDebt] = useState(false)
   const [overLimit, setOverLimit] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [sortField, setSortField] = useState('lastName')
+  const [sortDir, setSortDir] = useState('asc')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 25
   const [showCreate, setShowCreate] = useState(false)
   const navigate = useNavigate()
 
@@ -40,14 +50,34 @@ export default function ClientsList() {
     }
   }
 
-  useEffect(() => { fetchClients() }, [search, status, establishmentId])
+  useEffect(() => { fetchClients(); setPage(1) }, [search, status, establishmentId])
 
-  // Filtres client-side
-  const filtered = clients.filter((c) => {
-    if (withDebt && c.solde <= 0) return false
-    if (overLimit && (!c.creditLimit || c.solde <= c.creditLimit)) return false
-    return true
-  })
+  function toggleSort(f) {
+    if (sortField === f) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else { setSortField(f); setSortDir('asc') }
+    setPage(1)
+  }
+
+  // Filtres + tri + pagination client-side
+  const filtered = useMemo(() => {
+    const base = clients.filter((c) => {
+      if (withDebt && c.solde <= 0) return false
+      if (overLimit && (!c.creditLimit || c.solde <= c.creditLimit)) return false
+      return true
+    })
+    return [...base].sort((a, b) => {
+      let va, vb
+      if (sortField === 'solde') { va = a.solde || 0; vb = b.solde || 0 }
+      else if (sortField === 'status') { va = a.status; vb = b.status }
+      else { va = `${a.lastName} ${a.firstName}`.toLowerCase(); vb = `${b.lastName} ${b.firstName}`.toLowerCase() }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [clients, withDebt, overLimit, sortField, sortDir])
+
+  const pages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -69,7 +99,7 @@ export default function ClientsList() {
   }
 
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }
-  function resetFilters() { setSearch(''); setStatus(''); setEstablishmentId(''); setWithDebt(false); setOverLimit(false) }
+  function resetFilters() { setSearch(''); setStatus(''); setEstablishmentId(''); setWithDebt(false); setOverLimit(false); setPage(1) }
   const hasActiveFilters = search || status || establishmentId || withDebt || overLimit
 
   return (
@@ -135,6 +165,7 @@ export default function ClientsList() {
         <p className="text-sm text-gray-500">
           {filtered.length} client{filtered.length !== 1 ? 's' : ''}
           {filtered.length !== clients.length && ` (sur ${clients.length})`}
+          {pages > 1 && ` — page ${page}/${pages}`}
         </p>
       )}
 
@@ -142,19 +173,25 @@ export default function ClientsList() {
       <div className="card p-0 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="border-b border-night-800">
-            <tr className="text-gray-500">
-              <th className="text-left px-4 py-3">Client</th>
+            <tr className="text-gray-500 select-none">
+              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('lastName')}>
+                Client <SortIcon field="lastName" sortField={sortField} sortDir={sortDir} />
+              </th>
               <th className="text-left px-4 py-3 hidden md:table-cell">Téléphone</th>
-              <th className="text-left px-4 py-3">Statut</th>
-              <th className="text-right px-4 py-3">Solde dû</th>
+              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('status')}>
+                Statut <SortIcon field="status" sortField={sortField} sortDir={sortDir} />
+              </th>
+              <th className="text-right px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('solde')}>
+                Solde dû <SortIcon field="solde" sortField={sortField} sortDir={sortDir} />
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="text-center py-8 text-gray-500">Chargement...</td></tr>
+              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={4} />)
             ) : filtered.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8 text-gray-500">Aucun client trouvé</td></tr>
-            ) : filtered.map((c) => (
+            ) : paginated.map((c) => (
               <tr
                 key={c.id}
                 className="border-b border-night-800/50 hover:bg-night-800/30 cursor-pointer"
@@ -178,6 +215,26 @@ export default function ClientsList() {
             ))}
           </tbody>
         </table>
+
+        {pages > 1 && (
+          <div className="px-4 py-3 border-t border-night-800 flex items-center justify-between gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="btn-secondary text-sm disabled:opacity-40"
+            >
+              ← Préc.
+            </button>
+            <span className="text-sm text-gray-500">Page {page} / {pages}</span>
+            <button
+              disabled={page >= pages}
+              onClick={() => setPage((p) => p + 1)}
+              className="btn-secondary text-sm disabled:opacity-40"
+            >
+              Suiv. →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal création */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../../api/axios'
+import { useToast } from '../../context/ToastContext'
 
 const MOYENS = [
   { value: 'ESPECES', label: 'Espèces' },
@@ -13,6 +14,7 @@ const MOYENS = [
 export default function AddPaiement() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { addToast } = useToast()
   const [clients, setClients] = useState([])
   const [establishments, setEstablishments] = useState([])
   const [selectedClient, setSelectedClient] = useState(null)
@@ -24,9 +26,7 @@ export default function AddPaiement() {
     date: new Date().toISOString().split('T')[0],
     notes: '',
   })
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     api.get('/clients').then((r) => setClients(r.data))
@@ -42,14 +42,13 @@ export default function AddPaiement() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError(''); setSuccess('')
     setLoading(true)
     try {
       const { data } = await api.post('/transactions/paiement', form)
-      setSuccess(`Paiement enregistré ! Nouveau solde : ${Number(data.newSolde).toLocaleString('fr-FR')} FCFA`)
-      if (form.clientId) setTimeout(() => navigate(`/admin/clients/${form.clientId}`), 1500)
+      addToast(`Paiement enregistré ! Nouveau solde : ${Number(data.newSolde).toLocaleString('fr-FR')} FCFA`, 'success')
+      if (form.clientId) setTimeout(() => navigate(`/admin/clients/${form.clientId}`), 1000)
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur')
+      addToast(err.response?.data?.error || 'Erreur', 'error')
     } finally {
       setLoading(false)
     }
@@ -113,8 +112,6 @@ export default function AddPaiement() {
           <label className="label">Notes (visible comptabilité uniquement)</label>
           <textarea className="input" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        {success && <p className="text-emerald-400 text-sm">{success}</p>}
         <div className="flex gap-2">
           <button type="submit" className="btn-success flex-1" disabled={loading}>
             {loading ? 'Enregistrement...' : '💳 Enregistrer le paiement'}

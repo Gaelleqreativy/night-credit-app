@@ -28,6 +28,11 @@ export default function ClientDetail() {
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState('')
 
+  // Historique des modifications
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+
   useEffect(() => {
     api.get('/establishments').then((r) => setEstablishments(r.data))
   }, [])
@@ -77,6 +82,19 @@ export default function ClientDetail() {
       setEditError(err.response?.data?.error || 'Erreur')
     } finally {
       setEditLoading(false)
+    }
+  }
+
+  async function loadHistory() {
+    if (showHistory) { setShowHistory(false); return }
+    setShowHistory(true)
+    if (history.length > 0) return
+    setHistoryLoading(true)
+    try {
+      const { data } = await api.get(`/audit?clientId=${id}&limit=50`)
+      setHistory(data.logs)
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -246,6 +264,59 @@ export default function ClientDetail() {
           </table>
         </div>
       </div>
+
+      {/* Historique des modifications */}
+      {isAdmin && (
+        <div className="card p-0 overflow-hidden">
+          <button
+            onClick={loadHistory}
+            className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold hover:bg-night-800/30 transition-colors"
+          >
+            <span>📋 Historique des modifications</span>
+            <span className="text-gray-500">{showHistory ? '▲' : '▼'}</span>
+          </button>
+          {showHistory && (
+            <div className="border-t border-night-800">
+              {historyLoading ? (
+                <p className="text-center py-6 text-gray-500 text-sm">Chargement...</p>
+              ) : history.length === 0 ? (
+                <p className="text-center py-6 text-gray-500 text-sm">Aucune modification enregistrée</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="border-b border-night-800">
+                      <tr className="text-gray-500">
+                        <th className="text-left px-4 py-2">Date</th>
+                        <th className="text-left px-4 py-2">Utilisateur</th>
+                        <th className="text-left px-4 py-2">Action</th>
+                        <th className="text-left px-4 py-2">Entité</th>
+                        <th className="text-left px-4 py-2">Détails</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((log) => (
+                        <tr key={log.id} className="border-b border-night-800/40 hover:bg-night-800/20">
+                          <td className="px-4 py-2 whitespace-nowrap text-gray-400">
+                            {new Date(log.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </td>
+                          <td className="px-4 py-2 text-gray-300">{log.user?.name}</td>
+                          <td className="px-4 py-2">
+                            <span className={`badge ${log.action === 'CREATE' ? 'badge-green' : log.action === 'DELETE' ? 'badge-red' : 'badge-blue'}`}>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-gray-400">{log.entity} #{log.entityId}</td>
+                          <td className="px-4 py-2 text-gray-500 font-mono max-w-xs truncate">{log.detail || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal édition transaction */}
       {editTx && (
