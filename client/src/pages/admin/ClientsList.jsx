@@ -6,8 +6,8 @@ import { useAuth } from '../../context/AuthContext'
 import { SkeletonRow } from '../../components/Skeleton'
 
 function SortIcon({ field, sortField, sortDir }) {
-  if (sortField !== field) return <span className="text-night-700 ml-1">↕</span>
-  return <span className="text-indigo-400 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
+  if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>
+  return <span className="text-blue-500 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
 }
 
 export default function ClientsList() {
@@ -139,9 +139,9 @@ export default function ClientsList() {
               type="checkbox"
               checked={withDebt}
               onChange={(e) => setWithDebt(e.target.checked)}
-              className="w-4 h-4 accent-indigo-500"
+              className="w-4 h-4 accent-blue-500"
             />
-            <span className="text-sm text-gray-300">Avec dette uniquement</span>
+            <span className="text-sm text-gray-600">Avec dette uniquement</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
@@ -150,10 +150,10 @@ export default function ClientsList() {
               onChange={(e) => setOverLimit(e.target.checked)}
               className="w-4 h-4 accent-amber-500"
             />
-            <span className="text-sm text-amber-300/80">Plafond dépassé</span>
+            <span className="text-sm text-amber-600">Plafond dépassé</span>
           </label>
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
               ✕ Réinitialiser les filtres
             </button>
           )}
@@ -172,16 +172,16 @@ export default function ClientsList() {
       {/* Tableau */}
       <div className="card p-0 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-night-800">
+          <thead className="border-b border-gray-100">
             <tr className="text-gray-500 select-none">
-              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('lastName')}>
+              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('lastName')}>
                 Client <SortIcon field="lastName" sortField={sortField} sortDir={sortDir} />
               </th>
               <th className="text-left px-4 py-3 hidden md:table-cell">Téléphone</th>
-              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('status')}>
+              <th className="text-left px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('status')}>
                 Statut <SortIcon field="status" sortField={sortField} sortDir={sortDir} />
               </th>
-              <th className="text-right px-4 py-3 cursor-pointer hover:text-gray-300" onClick={() => toggleSort('solde')}>
+              <th className="text-right px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('solde')}>
                 Solde dû <SortIcon field="solde" sortField={sortField} sortDir={sortDir} />
               </th>
             </tr>
@@ -194,21 +194,21 @@ export default function ClientsList() {
             ) : paginated.map((c) => (
               <tr
                 key={c.id}
-                className="border-b border-night-800/50 hover:bg-night-800/30 cursor-pointer"
+                className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
                 onClick={() => navigate(`/admin/clients/${c.id}`)}
               >
-                <td className="px-4 py-3 font-medium">
+                <td className="px-4 py-3 font-medium text-gray-900">
                   {c.lastName} {c.firstName}
                   {c.creditLimit && c.solde > c.creditLimit && (
-                    <span className="ml-2 text-xs text-amber-400">⚠️ plafond</span>
+                    <span className="ml-2 text-xs text-amber-600">⚠️ plafond</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{c.phone}</td>
+                <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{c.phone}</td>
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td className="px-4 py-3 text-right font-semibold">
                   {c.solde > 0
-                    ? <span className="text-red-300">{fmt(c.solde)}</span>
-                    : <span className="text-emerald-400">Soldé</span>
+                    ? <span className="text-red-600">{fmt(c.solde)}</span>
+                    : <span className="text-emerald-600">Soldé</span>
                   }
                 </td>
               </tr>
@@ -217,7 +217,7 @@ export default function ClientsList() {
         </table>
 
         {pages > 1 && (
-          <div className="px-4 py-3 border-t border-night-800 flex items-center justify-between gap-2">
+          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-2">
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
@@ -239,8 +239,8 @@ export default function ClientsList() {
 
       {/* Modal création */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-md">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-4">Nouveau client</h2>
             <form onSubmit={handleCreate} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -265,7 +265,7 @@ export default function ClientsList() {
                 <label className="label">Plafond de crédit (optionnel)</label>
                 <input type="number" className="input" value={form.creditLimit} onChange={(e) => setForm({ ...form, creditLimit: e.target.value })} placeholder="Laisser vide = pas de limite" />
               </div>
-              {formError && <p className="text-red-400 text-sm">{formError}</p>}
+              {formError && <p className="text-red-600 text-sm">{formError}</p>}
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="btn-primary flex-1" disabled={formLoading}>
                   {formLoading ? 'Création...' : 'Créer'}

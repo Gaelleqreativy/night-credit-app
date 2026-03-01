@@ -9,19 +9,19 @@ const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
 
 function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
   const colorMap = {
-    indigo: 'text-indigo-400',
-    emerald: 'text-emerald-400',
-    red: 'text-red-400',
-    yellow: 'text-yellow-400',
+    indigo: 'text-blue-600',
+    emerald: 'text-emerald-600',
+    red: 'text-red-600',
+    yellow: 'text-amber-600',
   }
   const card = (
-    <div className="card hover:border-night-700 transition-colors group">
+    <div className="card hover:shadow-md transition-shadow group">
       <div className="flex items-start justify-between">
         <p className="text-sm text-gray-500">{label}</p>
         {icon && <span className="text-xl opacity-40 group-hover:opacity-70 transition-opacity">{icon}</span>}
       </div>
       <p className={`text-2xl font-bold mt-2 ${colorMap[color]}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-600 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
     </div>
   )
   return link ? <Link to={link}>{card}</Link> : card
@@ -84,7 +84,7 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
                     <p className="text-xs text-gray-500 mt-0.5">Taux de recouvrement : {taux}%</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-red-300">{fmt(e.solde)}</p>
+                    <p className="text-2xl font-bold text-red-600">{fmt(e.solde)}</p>
                     <p className="text-xs text-gray-500">solde dû</p>
                   </div>
                 </div>
@@ -95,20 +95,20 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
                     <span>Consommations</span>
                     <span>{fmt(e.totalConso)}</span>
                   </div>
-                  <div className="w-full bg-night-800 rounded-full h-2">
-                    <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
 
                 {/* Stats ligne */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-night-800/50 rounded-lg p-3">
+                  <div className="bg-gray-50 rounded-xl p-3">
                     <p className="text-xs text-gray-500">Encaissé</p>
-                    <p className="text-emerald-300 font-semibold mt-0.5">{fmt(e.totalPaiement)}</p>
+                    <p className="text-emerald-600 font-semibold mt-0.5">{fmt(e.totalPaiement)}</p>
                   </div>
-                  <div className="bg-night-800/50 rounded-lg p-3">
+                  <div className="bg-gray-50 rounded-xl p-3">
                     <p className="text-xs text-gray-500">Non réglé</p>
-                    <p className="text-red-300 font-semibold mt-0.5">{fmt(e.solde)}</p>
+                    <p className="text-red-600 font-semibold mt-0.5">{fmt(e.solde)}</p>
                   </div>
                 </div>
               </div>
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
       {/* Alertes */}
       {stats?.contestationsOuvertes > 0 && (
         <Link to="/admin/disputes" className="block">
-          <div className="bg-red-900/30 border border-red-700 rounded-xl px-4 py-3 text-red-300 text-sm flex items-center gap-2 hover:bg-red-900/40 transition-colors">
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-red-700 text-sm flex items-center gap-2 hover:bg-red-100 transition-colors">
             <span>⚠️</span>
             <span>{stats.contestationsOuvertes} contestation(s) ouverte(s) en attente de traitement</span>
             <span className="ml-auto text-xs underline">Voir →</span>
@@ -196,8 +196,8 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="space-y-1 animate-pulse">
-                  <div className="h-3 w-32 bg-night-800 rounded" />
-                  <div className="h-2 bg-night-800 rounded" style={{ width: `${60 - i * 15}%` }} />
+                  <div className="h-3 w-32 bg-gray-100 rounded" />
+                  <div className="h-2 bg-gray-100 rounded" style={{ width: `${60 - i * 15}%` }} />
                 </div>
               ))}
             </div>
@@ -206,12 +206,12 @@ export default function AdminDashboard() {
               {stats?.byEstablishment?.map((e) => (
                 <div key={e.id}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-200">{e.name}</span>
-                    <span className="text-red-300 font-semibold">{fmt(e.solde)}</span>
+                    <span className="font-medium text-gray-700">{e.name}</span>
+                    <span className="text-red-600 font-semibold">{fmt(e.solde)}</span>
                   </div>
-                  <div className="w-full bg-night-800 rounded-full h-1.5">
+                  <div className="w-full bg-gray-100 rounded-full h-1.5">
                     <div
-                      className="bg-indigo-500 h-1.5 rounded-full transition-all"
+                      className="bg-blue-500 h-1.5 rounded-full transition-all"
                       style={{ width: `${Math.min(100, ((e.totalConso || 0) / maxConso) * 100)}%` }}
                     />
                   </div>
@@ -235,9 +235,9 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 animate-pulse">
-                  <div className="w-5 h-3 bg-night-800 rounded" />
-                  <div className="flex-1 h-4 bg-night-800 rounded" />
-                  <div className="w-24 h-4 bg-night-800 rounded" />
+                  <div className="w-5 h-3 bg-gray-100 rounded" />
+                  <div className="flex-1 h-4 bg-gray-100 rounded" />
+                  <div className="w-24 h-4 bg-gray-100 rounded" />
                 </div>
               ))}
             </div>
@@ -245,14 +245,14 @@ export default function AdminDashboard() {
             <div className="space-y-1">
               {stats?.top10?.slice(0, 5).map((c, i) => (
                 <Link key={c.id} to={`/admin/clients/${c.id}`}>
-                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-night-800 transition-colors group">
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
                     <div className="flex items-center gap-3">
-                      <span className={`text-sm font-bold w-6 text-center ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : 'text-gray-600'}`}>
+                      <span className={`text-sm font-bold w-6 text-center ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : 'text-gray-400'}`}>
                         {i + 1}
                       </span>
-                      <span className="group-hover:text-white transition-colors">{c.lastName} {c.firstName}</span>
+                      <span className="group-hover:text-gray-900 transition-colors text-gray-700">{c.lastName} {c.firstName}</span>
                     </div>
-                    <span className="text-red-400 font-semibold">{fmt(c.solde)}</span>
+                    <span className="text-red-600 font-semibold">{fmt(c.solde)}</span>
                   </div>
                 </Link>
               ))}

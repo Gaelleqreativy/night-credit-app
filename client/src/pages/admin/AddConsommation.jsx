@@ -95,9 +95,9 @@ export default function AddConsommation() {
           <textarea className="input" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Table VIP, client régulier..." />
         </div>
         {creditAlert && (
-          <div className="bg-amber-900/40 border border-amber-600 rounded-lg px-3 py-2">
-            <p className="text-amber-300 text-sm font-medium">⚠️ Dépassement du plafond de crédit</p>
-            <p className="text-amber-200/70 text-xs mt-0.5">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <p className="text-amber-700 text-sm font-medium">⚠️ Dépassement du plafond de crédit</p>
+            <p className="text-amber-600 text-xs mt-0.5">
               Solde actuel: {Number(selectedClient.solde).toLocaleString('fr-FR')} FCFA + {Number(form.consommation).toLocaleString('fr-FR')} FCFA = {(selectedClient.solde + Number(form.consommation)).toLocaleString('fr-FR')} FCFA
               (plafond: {Number(selectedClient.creditLimit).toLocaleString('fr-FR')} FCFA)
             </p>

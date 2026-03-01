@@ -70,15 +70,15 @@ export default function ClientTransactions() {
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
           <div className="card py-2">
             <p className="text-xs text-gray-500">Conso</p>
-            <p className="font-semibold text-indigo-300">{fmt(totalConso)}</p>
+            <p className="font-semibold text-blue-600">{fmt(totalConso)}</p>
           </div>
           <div className="card py-2">
             <p className="text-xs text-gray-500">Payé</p>
-            <p className="font-semibold text-emerald-300">{fmt(totalPaid)}</p>
+            <p className="font-semibold text-emerald-600">{fmt(totalPaid)}</p>
           </div>
           <div className="card py-2">
             <p className="text-xs text-gray-500">Solde</p>
-            <p className="font-semibold text-red-300">{fmt(Math.max(0, totalConso - totalPaid))}</p>
+            <p className="font-semibold text-red-600">{fmt(Math.max(0, totalConso - totalPaid))}</p>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function ClientTransactions() {
         ) : (
           <div className="space-y-2">
             {transactions.map((t) => (
-              <div key={t.id} className={`card ${t.disputed ? 'border-yellow-600' : ''}`}>
+              <div key={t.id} className={`card ${t.disputed ? 'border-amber-300' : ''}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -104,26 +104,26 @@ export default function ClientTransactions() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-300 mt-1">{t.establishment?.name}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t.establishment?.name}</p>
                     {t.ticketRef && <p className="text-xs text-gray-500">Réf: {t.ticketRef}</p>}
                     {t.moyenPaiement && <p className="text-xs text-gray-500">{t.moyenPaiement}</p>}
                   </div>
                   <div className="text-right shrink-0">
                     {t.type === 'CONSOMMATION' ? (
-                      <p className="text-indigo-300 font-semibold">{fmt(t.consommation)}</p>
+                      <p className="text-blue-600 font-semibold">{fmt(t.consommation)}</p>
                     ) : (
-                      <p className="text-emerald-400 font-semibold">-{fmt(t.paiement)}</p>
+                      <p className="text-emerald-600 font-semibold">-{fmt(t.paiement)}</p>
                     )}
                     <div className="flex gap-2 mt-1 justify-end items-center">
                       {t.ticketPhotoUrl && (
-                        <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-400">
+                        <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600">
                           📷 Ticket
                         </a>
                       )}
                       {!t.disputed && t.type === 'CONSOMMATION' && (
                         <button
                           onClick={() => setDisputeModal(t.id)}
-                          className="text-xs text-yellow-500 hover:text-yellow-300"
+                          className="text-xs text-amber-600 hover:text-amber-800"
                         >
                           ⚠️ Contester
                         </button>
@@ -139,7 +139,7 @@ export default function ClientTransactions() {
 
       {/* Modal contestation */}
       {disputeModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center p-4 z-50">
           <div className="card w-full max-w-sm">
             <h2 className="font-semibold mb-3">Contester cette transaction</h2>
             <form onSubmit={handleDispute} className="space-y-3">

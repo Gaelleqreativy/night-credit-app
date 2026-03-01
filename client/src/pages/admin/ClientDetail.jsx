@@ -120,7 +120,7 @@ export default function ClientDetail() {
   function resetFilters() { setYear(''); setEstablishmentId(''); setType(''); setDisputedOnly(false) }
 
   if (loading) return <div className="text-gray-500 text-center py-20">Chargement...</div>
-  if (!client) return <div className="text-red-400 text-center py-20">Client introuvable</div>
+  if (!client) return <div className="text-red-600 text-center py-20">Client introuvable</div>
 
   const overLimit = client.creditLimit && client.solde > client.creditLimit
 
@@ -129,9 +129,9 @@ export default function ClientDetail() {
       {/* En-tête */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <Link to="/admin/clients" className="text-gray-500 text-sm hover:text-gray-300">← Retour</Link>
+          <Link to="/admin/clients" className="text-gray-500 text-sm hover:text-gray-900">← Retour</Link>
           <h1 className="text-2xl font-bold mt-1">{client.lastName} {client.firstName}</h1>
-          <p className="text-gray-400">{client.phone}</p>
+          <p className="text-gray-500">{client.phone}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm">⬇️ Excel</button>
@@ -143,24 +143,24 @@ export default function ClientDetail() {
 
       {/* Solde + statut */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className={`card ${overLimit ? 'border-red-500' : ''}`}>
+        <div className={`card ${overLimit ? 'border-red-300' : ''}`}>
           <p className="text-sm text-gray-500">Solde dû</p>
-          <p className="text-2xl font-bold text-red-400">{fmt(client.solde)}</p>
-          {overLimit && <p className="text-xs text-red-400 mt-1">⚠️ Plafond dépassé !</p>}
+          <p className="text-2xl font-bold text-red-600">{fmt(client.solde)}</p>
+          {overLimit && <p className="text-xs text-red-600 mt-1">⚠️ Plafond dépassé !</p>}
         </div>
         <div className="card">
           <p className="text-sm text-gray-500">Total consommé</p>
-          <p className="text-xl font-semibold text-indigo-300">{fmt(client.totalConso)}</p>
+          <p className="text-xl font-semibold text-blue-600">{fmt(client.totalConso)}</p>
         </div>
         <div className="card">
           <p className="text-sm text-gray-500">Total encaissé</p>
-          <p className="text-xl font-semibold text-emerald-300">{fmt(client.totalPaiement)}</p>
+          <p className="text-xl font-semibold text-emerald-600">{fmt(client.totalPaiement)}</p>
         </div>
         <div className="card">
           <p className="text-sm text-gray-500 mb-1">Statut</p>
           <StatusBadge status={client.status} />
           {client.creditLimit && <p className="text-xs text-gray-500 mt-1">Plafond : {fmt(client.creditLimit)}</p>}
-          {!isManager && <button onClick={() => setEditStatus(true)} className="text-xs text-indigo-400 mt-2 hover:underline">Modifier</button>}
+          {!isManager && <button onClick={() => setEditStatus(true)} className="text-xs text-blue-600 mt-2 hover:underline">Modifier</button>}
           {editStatus && (
             <div className="mt-2 flex gap-2">
               <select className="input text-xs" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
@@ -185,10 +185,10 @@ export default function ClientDetail() {
               onChange={(e) => setDisputedOnly(e.target.checked)}
               className="w-4 h-4 accent-red-500"
             />
-            <span className="text-sm text-red-300/80">Contestées seulement</span>
+            <span className="text-sm text-red-600">Contestées seulement</span>
           </label>
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
               ✕ Réinitialiser
             </button>
           )}
@@ -203,12 +203,12 @@ export default function ClientDetail() {
 
       {/* Transactions */}
       <div className="card p-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-night-800 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold">Transactions</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-night-800">
+            <thead className="border-b border-gray-100">
               <tr className="text-gray-500">
                 <th className="text-left px-4 py-2">Date</th>
                 <th className="text-left px-4 py-2">Établissement</th>
@@ -224,33 +224,33 @@ export default function ClientDetail() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-6 text-gray-500">Aucune transaction</td></tr>
               ) : filtered.map((t) => (
-                <tr key={t.id} className={`border-b border-night-800/50 hover:bg-night-800/20 ${t.disputed ? 'bg-red-900/10' : ''}`}>
+                <tr key={t.id} className={`border-b border-gray-50 hover:bg-gray-50 ${t.disputed ? 'bg-red-50' : ''}`}>
                   <td className="px-4 py-2">{fmtDate(t.date)}</td>
-                  <td className="px-4 py-2 text-gray-300">{t.establishment.name}</td>
-                  <td className="px-4 py-2 text-gray-400 hidden md:table-cell">
+                  <td className="px-4 py-2 text-gray-700">{t.establishment.name}</td>
+                  <td className="px-4 py-2 text-gray-500 hidden md:table-cell">
                     {t.ticketRef || '-'}
                     {t.ticketPhotoUrl && (
-                      <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="ml-2 text-indigo-400 text-xs">📷</a>
+                      <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="ml-2 text-blue-600 text-xs">📷</a>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-right text-indigo-300">{t.consommation ? fmt(t.consommation) : '-'}</td>
-                  <td className="px-4 py-2 text-right text-emerald-300">{t.paiement ? fmt(t.paiement) : '-'}</td>
-                  <td className="px-4 py-2 hidden lg:table-cell text-gray-400">{t.moyenPaiement || '-'}</td>
-                  <td className="px-4 py-2 hidden lg:table-cell text-gray-400 max-w-xs truncate">{t.notes || '-'}</td>
+                  <td className="px-4 py-2 text-right text-blue-600">{t.consommation ? fmt(t.consommation) : '-'}</td>
+                  <td className="px-4 py-2 text-right text-emerald-600">{t.paiement ? fmt(t.paiement) : '-'}</td>
+                  <td className="px-4 py-2 hidden lg:table-cell text-gray-500">{t.moyenPaiement || '-'}</td>
+                  <td className="px-4 py-2 hidden lg:table-cell text-gray-500 max-w-xs truncate">{t.notes || '-'}</td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
                     {t.disputed && <span className="badge-red badge text-xs mr-1">Contesté</span>}
                     {isAdmin && (
                       <>
                         <button
                           onClick={() => openEditModal(t)}
-                          className="text-indigo-400 hover:text-indigo-200 text-xs mr-2"
+                          className="text-blue-600 hover:text-blue-800 text-xs mr-2"
                           title="Modifier"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => deleteTransaction(t.id)}
-                          className="text-red-500 hover:text-red-300 text-xs"
+                          className="text-red-500 hover:text-red-700 text-xs"
                           title="Supprimer"
                         >
                           ✕
@@ -270,13 +270,13 @@ export default function ClientDetail() {
         <div className="card p-0 overflow-hidden">
           <button
             onClick={loadHistory}
-            className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold hover:bg-night-800/30 transition-colors"
+            className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold hover:bg-gray-50 transition-colors"
           >
             <span>📋 Historique des modifications</span>
-            <span className="text-gray-500">{showHistory ? '▲' : '▼'}</span>
+            <span className="text-gray-400">{showHistory ? '▲' : '▼'}</span>
           </button>
           {showHistory && (
-            <div className="border-t border-night-800">
+            <div className="border-t border-gray-100">
               {historyLoading ? (
                 <p className="text-center py-6 text-gray-500 text-sm">Chargement...</p>
               ) : history.length === 0 ? (
@@ -284,7 +284,7 @@ export default function ClientDetail() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
-                    <thead className="border-b border-night-800">
+                    <thead className="border-b border-gray-100">
                       <tr className="text-gray-500">
                         <th className="text-left px-4 py-2">Date</th>
                         <th className="text-left px-4 py-2">Utilisateur</th>
@@ -295,17 +295,17 @@ export default function ClientDetail() {
                     </thead>
                     <tbody>
                       {history.map((log) => (
-                        <tr key={log.id} className="border-b border-night-800/40 hover:bg-night-800/20">
-                          <td className="px-4 py-2 whitespace-nowrap text-gray-400">
+                        <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-4 py-2 whitespace-nowrap text-gray-500">
                             {new Date(log.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
                           </td>
-                          <td className="px-4 py-2 text-gray-300">{log.user?.name}</td>
+                          <td className="px-4 py-2 text-gray-700">{log.user?.name}</td>
                           <td className="px-4 py-2">
                             <span className={`badge ${log.action === 'CREATE' ? 'badge-green' : log.action === 'DELETE' ? 'badge-red' : 'badge-blue'}`}>
                               {log.action}
                             </span>
                           </td>
-                          <td className="px-4 py-2 text-gray-400">{log.entity} #{log.entityId}</td>
+                          <td className="px-4 py-2 text-gray-500">{log.entity} #{log.entityId}</td>
                           <td className="px-4 py-2 text-gray-500 font-mono max-w-xs truncate">{log.detail || '-'}</td>
                         </tr>
                       ))}
@@ -320,8 +320,8 @@ export default function ClientDetail() {
 
       {/* Modal édition transaction */}
       {editTx && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-md">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-1">Modifier la transaction</h2>
             <p className="text-xs text-gray-500 mb-4">
               {editTx.type === 'CONSOMMATION' ? '🍾 Consommation' : '💳 Paiement'} — ID #{editTx.id}
@@ -410,7 +410,7 @@ export default function ClientDetail() {
                 />
               </div>
 
-              {editError && <p className="text-red-400 text-sm">{editError}</p>}
+              {editError && <p className="text-red-600 text-sm">{editError}</p>}
 
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="btn-primary flex-1" disabled={editLoading}>

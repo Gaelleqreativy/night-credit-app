@@ -128,7 +128,7 @@ export default function DisputesPage() {
             <input type="date" className="input w-auto text-sm" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </div>
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-400 ml-auto">
+            <button onClick={resetFilters} className="text-xs text-gray-500 hover:text-red-500 ml-auto">
               ✕ Réinitialiser
             </button>
           )}
@@ -145,7 +145,7 @@ export default function DisputesPage() {
       {/* Ouvertes */}
       {showOpen && (
         <div className="card p-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-night-800 flex items-center gap-2">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
             <h2 className="font-semibold">Contestations ouvertes</h2>
             {open.length > 0 && <span className="badge badge-red">{open.length}</span>}
           </div>
@@ -155,7 +155,7 @@ export default function DisputesPage() {
             <p className="text-center py-6 text-gray-500">Aucune contestation ouverte</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-night-800">
+              <thead className="border-b border-gray-100">
                 <tr className="text-gray-500">
                   <th className="text-left px-4 py-2">Date</th>
                   <th className="text-left px-4 py-2">Client</th>
@@ -167,16 +167,16 @@ export default function DisputesPage() {
               </thead>
               <tbody>
                 {open.map((d) => (
-                  <tr key={d.id} className="border-b border-night-800/50 hover:bg-night-800/20">
+                  <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">{fmtDate(d.date)}</td>
                     <td className="px-4 py-3">
-                      <Link to={`/admin/clients/${d.clientId}`} className="text-indigo-400 hover:underline">
+                      <Link to={`/admin/clients/${d.clientId}`} className="text-blue-600 hover:underline">
                         {d.client?.lastName} {d.client?.firstName}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{d.establishment?.name}</td>
+                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{d.establishment?.name}</td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
-                    <td className="px-4 py-3 text-yellow-300 text-sm max-w-xs truncate">{d.disputeNote}</td>
+                    <td className="px-4 py-3 text-amber-700 text-sm max-w-xs truncate">{d.disputeNote}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => openResolveModal(d)} className="btn-primary text-xs px-3 py-1 whitespace-nowrap">
                         Traiter
@@ -193,11 +193,11 @@ export default function DisputesPage() {
       {/* Résolues */}
       {showResolved && resolved.length > 0 && (
         <div className="card p-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-night-800">
-            <h2 className="font-semibold text-gray-400">Contestations traitées ({resolved.length})</h2>
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-500">Contestations traitées ({resolved.length})</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="border-b border-night-800">
+            <thead className="border-b border-gray-100">
               <tr className="text-gray-500">
                 <th className="text-left px-4 py-2">Date</th>
                 <th className="text-left px-4 py-2">Client</th>
@@ -210,17 +210,17 @@ export default function DisputesPage() {
             </thead>
             <tbody>
               {resolved.map((d) => (
-                <tr key={d.id} className="border-b border-night-800/50 opacity-70">
+                <tr key={d.id} className="border-b border-gray-50 opacity-70">
                   <td className="px-4 py-2 whitespace-nowrap">{fmtDate(d.date)}</td>
                   <td className="px-4 py-2">
-                    <Link to={`/admin/clients/${d.clientId}`} className="text-indigo-400 hover:underline">
+                    <Link to={`/admin/clients/${d.clientId}`} className="text-blue-600 hover:underline">
                       {d.client?.lastName} {d.client?.firstName}
                     </Link>
                   </td>
                   <td className="px-4 py-2 text-gray-500 hidden md:table-cell">{d.establishment?.name}</td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">{fmt(d.consommation || d.paiement)}</td>
-                  <td className="px-4 py-2 text-gray-400 text-sm max-w-[160px] truncate">{d.disputeNote}</td>
-                  <td className="px-4 py-2 text-gray-400 text-sm max-w-[160px] truncate">{d.resolveNote || '-'}</td>
+                  <td className="px-4 py-2 text-gray-500 text-sm max-w-[160px] truncate">{d.disputeNote}</td>
+                  <td className="px-4 py-2 text-gray-500 text-sm max-w-[160px] truncate">{d.resolveNote || '-'}</td>
                   <td className="px-4 py-2">
                     {d.disputeStatus === 'ACCEPTEE'
                       ? <span className="badge badge-green">Acceptée</span>
@@ -236,17 +236,17 @@ export default function DisputesPage() {
 
       {/* Modal résolution */}
       {resolveTx && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-md">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-1">Traiter la contestation</h2>
             <div className="mb-4 space-y-1">
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-700">
                 <span className="text-gray-500">Client :</span> {resolveTx.client?.lastName} {resolveTx.client?.firstName}
               </p>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-700">
                 <span className="text-gray-500">Montant :</span> {fmt(resolveTx.consommation || resolveTx.paiement)}
               </p>
-              <p className="text-sm text-yellow-300 mt-2">
+              <p className="text-sm text-amber-700 mt-2">
                 <span className="text-gray-500">Motif client :</span> {resolveTx.disputeNote}
               </p>
             </div>
@@ -262,7 +262,7 @@ export default function DisputesPage() {
               />
             </div>
 
-            {resolveError && <p className="text-red-400 text-sm mb-3">{resolveError}</p>}
+            {resolveError && <p className="text-red-600 text-sm mb-3">{resolveError}</p>}
 
             <div className="flex gap-2">
               <button

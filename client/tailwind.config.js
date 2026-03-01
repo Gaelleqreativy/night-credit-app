@@ -5,13 +5,13 @@ export default {
     extend: {
       colors: {
         night: {
-          50: '#f0f0ff',
-          100: '#e0e0ff',
-          500: '#6366f1',
-          700: '#4338ca',
-          800: '#2d1b69',
-          900: '#1e1b4b',
-          950: '#0f0f1a',
+          50:  '#EFF6FF',  // very light blue tint
+          100: '#DBEAFE',  // light blue
+          500: '#2563EB',  // primary blue
+          700: '#E5E7EB',  // gray-200 — borders
+          800: '#F3F4F6',  // gray-100 — hover, input bg
+          900: '#FFFFFF',  // white — cards, sidebar
+          950: '#F6F7FB',  // page background
         },
       },
     },

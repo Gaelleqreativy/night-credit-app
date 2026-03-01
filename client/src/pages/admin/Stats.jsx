@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import api from '../../api/axios'
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 const MOYEN_LABELS = {
   ESPECES: 'Espèces', CB: 'Carte bancaire', VIREMENT: 'Virement', CHEQUE: 'Chèque', MOBILE_MONEY: 'Mobile Money'
@@ -47,10 +47,10 @@ export default function StatsPage() {
       {/* KPI */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total consommé', value: fmt(stats?.totalConso) + ' FCFA', color: 'text-indigo-400' },
-          { label: 'Total encaissé', value: fmt(stats?.totalPaiement) + ' FCFA', color: 'text-emerald-400' },
-          { label: 'Solde total dû', value: fmt(stats?.totalDu) + ' FCFA', color: 'text-red-400' },
-          { label: 'Clients actifs', value: stats?.clientsActifs, color: 'text-yellow-400' },
+          { label: 'Total consommé', value: fmt(stats?.totalConso) + ' FCFA', color: 'text-blue-600' },
+          { label: 'Total encaissé', value: fmt(stats?.totalPaiement) + ' FCFA', color: 'text-emerald-600' },
+          { label: 'Solde total dû', value: fmt(stats?.totalDu) + ' FCFA', color: 'text-red-600' },
+          { label: 'Clients actifs', value: stats?.clientsActifs, color: 'text-amber-600' },
         ].map((k) => (
           <div key={k.label} className="card">
             <p className="text-xs text-gray-500">{k.label}</p>
@@ -64,13 +64,14 @@ export default function StatsPage() {
         <h2 className="font-semibold mb-4">Évolution mensuelle {year}</h2>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={stats?.monthly || []}>
-            <XAxis dataKey="label" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" tickFormatter={(v) => fmt(v)} />
+            <XAxis dataKey="label" stroke="#9ca3af" />
+            <YAxis stroke="#9ca3af" tickFormatter={(v) => fmt(v)} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#1e1b4b', border: '1px solid #4338ca', borderRadius: 8 }}
+              contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+              labelStyle={{ color: '#111827', fontWeight: 600 }}
               formatter={(v, n) => [fmt(v) + ' FCFA', n === 'conso' ? 'Consommations' : 'Paiements']}
             />
-            <Bar dataKey="conso" fill="#6366f1" radius={[4, 4, 0, 0]} name="conso" />
+            <Bar dataKey="conso" fill="#2563eb" radius={[4, 4, 0, 0]} name="conso" />
             <Bar dataKey="paiement" fill="#10b981" radius={[4, 4, 0, 0]} name="paiement" />
           </BarChart>
         </ResponsiveContainer>
@@ -84,10 +85,10 @@ export default function StatsPage() {
             {(stats?.top10 || []).map((c, i) => (
               <div key={c.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600 w-4">{i + 1}</span>
-                  <span className="text-sm">{c.lastName} {c.firstName}</span>
+                  <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+                  <span className="text-sm text-gray-700">{c.lastName} {c.firstName}</span>
                 </div>
-                <span className="text-red-400 text-sm font-semibold">{fmt(c.solde)} FCFA</span>
+                <span className="text-red-600 text-sm font-semibold">{fmt(c.solde)} FCFA</span>
               </div>
             ))}
           </div>
@@ -102,7 +103,10 @@ export default function StatsPage() {
                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                   {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v) => [fmt(v) + ' FCFA']} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8 }}
+                  formatter={(v) => [fmt(v) + ' FCFA']}
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (

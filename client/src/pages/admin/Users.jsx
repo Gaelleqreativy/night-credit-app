@@ -53,7 +53,7 @@ export default function UsersPage() {
 
       <div className="card p-0 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-night-800">
+          <thead className="border-b border-gray-100">
             <tr className="text-gray-500">
               <th className="text-left px-4 py-2">Nom</th>
               <th className="text-left px-4 py-2">Email</th>
@@ -64,17 +64,17 @@ export default function UsersPage() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-night-800/50">
+              <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium">{u.name}</td>
-                <td className="px-4 py-3 text-gray-400">{u.email}</td>
+                <td className="px-4 py-3 text-gray-500">{u.email}</td>
                 <td className="px-4 py-3">
                   <span className={`badge ${u.role === 'ADMIN' ? 'badge-red' : u.role === 'MANAGER' ? 'badge-purple' : 'badge-blue'}`}>{u.role}</span>
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs">
+                <td className="px-4 py-3 text-gray-500 text-xs">
                   {u.establishments?.map((e) => e.name).join(', ') || 'Tous'}
                 </td>
                 <td className="px-4 py-3">
-                  <button onClick={() => deleteUser(u.id)} className="text-red-500 hover:text-red-300 text-xs">✕</button>
+                  <button onClick={() => deleteUser(u.id)} className="text-red-500 hover:text-red-700 text-xs">✕</button>
                 </td>
               </tr>
             ))}
@@ -83,7 +83,7 @@ export default function UsersPage() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Nouvel utilisateur</h2>
             <form onSubmit={handleCreate} className="space-y-3">
@@ -112,12 +112,12 @@ export default function UsersPage() {
                   <label className="label">Accès établissements</label>
                   <div className="space-y-1">
                     {establishments.map((e) => (
-                      <label key={e.id} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                      <label key={e.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={form.establishmentIds.includes(e.id)}
                           onChange={() => toggleEtab(e.id)}
-                          className="accent-indigo-500"
+                          className="accent-blue-500"
                         />
                         {e.name}
                       </label>
@@ -125,7 +125,7 @@ export default function UsersPage() {
                   </div>
                 </div>
               )}
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && <p className="text-red-600 text-sm">{error}</p>}
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="btn-primary flex-1" disabled={loading}>
                   {loading ? 'Création...' : 'Créer'}

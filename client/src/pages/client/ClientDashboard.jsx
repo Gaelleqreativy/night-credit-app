@@ -66,7 +66,7 @@ export default function ClientDashboard() {
 
         {/* Greeting */}
         <div>
-          <p className="text-gray-400 text-sm">Bonjour,</p>
+          <p className="text-gray-500 text-sm">Bonjour,</p>
           <h1 className="text-xl font-bold">{clientData?.firstName} {clientData?.lastName}</h1>
         </div>
 
@@ -76,10 +76,10 @@ export default function ClientDashboard() {
 
           /* ── CAS 1 : Solde à zéro ── */
           <div className="space-y-4">
-            <div className="rounded-2xl p-6 text-center bg-emerald-900/30 border border-emerald-700">
+            <div className="rounded-2xl p-6 text-center bg-emerald-50 border border-emerald-200">
               <p className="text-4xl mb-2">✓</p>
-              <p className="text-emerald-400 font-semibold text-lg">Votre compte est à jour</p>
-              <p className="text-gray-400 text-sm mt-1">Aucune dette en cours</p>
+              <p className="text-emerald-700 font-semibold text-lg">Votre compte est à jour</p>
+              <p className="text-gray-500 text-sm mt-1">Aucune dette en cours</p>
               <div className="mt-3">
                 <StatusBadge status={clientData?.status || 'SOLDE'} />
               </div>
@@ -99,9 +99,9 @@ export default function ClientDashboard() {
           <div className="space-y-5">
 
             {/* Solde principal */}
-            <div className="rounded-2xl p-5 text-center bg-red-900/30 border border-red-700">
-              <p className="text-sm text-gray-400">Solde dû</p>
-              <p className="text-4xl font-bold mt-1 text-red-300">{fmt(solde)}</p>
+            <div className="rounded-2xl p-5 text-center bg-red-50 border border-red-200">
+              <p className="text-sm text-gray-500">Solde dû</p>
+              <p className="text-4xl font-bold mt-1 text-red-600">{fmt(solde)}</p>
               <div className="mt-2">
                 <StatusBadge status={clientData?.status || 'EN_COURS'} />
               </div>
@@ -109,12 +109,12 @@ export default function ClientDashboard() {
 
             {/* Transactions en cours */}
             <div className="card">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-4">Transactions en cours</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide mb-4">Transactions en cours</p>
               <div className="space-y-0">
                 {openTransactions.map((t, i) => (
                   <div
                     key={t.id}
-                    className={`flex items-center justify-between gap-3 py-3 ${i < openTransactions.length - 1 ? 'border-b border-gray-700/50' : ''}`}
+                    className={`flex items-center justify-between gap-3 py-3 ${i < openTransactions.length - 1 ? 'border-b border-gray-100' : ''}`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -123,24 +123,24 @@ export default function ClientDashboard() {
                         </span>
                         <span className="text-xs text-gray-500">{fmtDate(t.date)}</span>
                       </div>
-                      <p className="text-sm text-gray-300 mt-1 truncate">{t.establishment?.name}</p>
+                      <p className="text-sm text-gray-600 mt-1 truncate">{t.establishment?.name}</p>
                       {t.ticketRef && (
-                        <p className="text-xs text-gray-600">Réf : {t.ticketRef}</p>
+                        <p className="text-xs text-gray-400">Réf : {t.ticketRef}</p>
                       )}
                       {t.disputed && (
                         <div className="mt-1">
                           {t.disputeStatus === 'ACCEPTEE' ? (
                             <div>
-                              <span className="text-xs text-emerald-400">✓ Contestation acceptée</span>
-                              {t.resolveNote && <p className="text-xs text-gray-400 mt-0.5">{t.resolveNote}</p>}
+                              <span className="text-xs text-emerald-600">✓ Contestation acceptée</span>
+                              {t.resolveNote && <p className="text-xs text-gray-500 mt-0.5">{t.resolveNote}</p>}
                             </div>
                           ) : t.disputeStatus === 'REJETEE' ? (
                             <div>
-                              <span className="text-xs text-red-400">✗ Contestation rejetée</span>
-                              {t.resolveNote && <p className="text-xs text-gray-400 mt-0.5">{t.resolveNote}</p>}
+                              <span className="text-xs text-red-600">✗ Contestation rejetée</span>
+                              {t.resolveNote && <p className="text-xs text-gray-500 mt-0.5">{t.resolveNote}</p>}
                             </div>
                           ) : (
-                            <span className="text-xs text-yellow-400">⏳ En cours de traitement</span>
+                            <span className="text-xs text-amber-600">⏳ En cours de traitement</span>
                           )}
                         </div>
                       )}
@@ -148,15 +148,15 @@ export default function ClientDashboard() {
 
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {t.type === 'CONSOMMATION' ? (
-                        <p className="text-indigo-300 font-semibold">{fmt(t.consommation)}</p>
+                        <p className="text-blue-600 font-semibold">{fmt(t.consommation)}</p>
                       ) : (
-                        <p className="text-emerald-400 font-semibold">− {fmt(t.paiement)}</p>
+                        <p className="text-emerald-600 font-semibold">− {fmt(t.paiement)}</p>
                       )}
                       <div className="flex gap-2 items-center">
                         {t.ticketPhotoUrl && (
                           <button
                             onClick={() => setPhotoModal(t.ticketPhotoUrl)}
-                            className="text-xs text-indigo-400 hover:text-indigo-200 transition-colors"
+                            className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
                             title="Voir le ticket"
                           >
                             📷
@@ -165,7 +165,7 @@ export default function ClientDashboard() {
                         {t.type === 'CONSOMMATION' && !t.disputed && (
                           <button
                             onClick={() => setDisputeModal(t.id)}
-                            className="text-xs text-yellow-500 hover:text-yellow-300 transition-colors"
+                            className="text-xs text-amber-600 hover:text-amber-800 transition-colors"
                             title="Contester"
                           >
                             ⚠️
@@ -177,8 +177,8 @@ export default function ClientDashboard() {
                 ))}
 
                 {/* Récapitulatif */}
-                <div className="pt-3 border-t border-gray-600 space-y-1 mt-1">
-                  <div className="flex justify-between text-sm text-gray-400">
+                <div className="pt-3 border-t border-gray-200 space-y-1 mt-1">
+                  <div className="flex justify-between text-sm text-gray-500">
                     <span>Consommations</span>
                     <span>{fmt(openConso)}</span>
                   </div>
@@ -188,9 +188,9 @@ export default function ClientDashboard() {
                       <span>− {fmt(openPaid)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold text-base pt-1 border-t border-gray-700">
-                    <span className="text-gray-200">Solde dû</span>
-                    <span className="text-red-300">{fmt(solde)}</span>
+                  <div className="flex justify-between font-bold text-base pt-1 border-t border-gray-200">
+                    <span className="text-gray-900">Solde dû</span>
+                    <span className="text-red-600">{fmt(solde)}</span>
                   </div>
                 </div>
               </div>
@@ -203,10 +203,10 @@ export default function ClientDashboard() {
 
       {/* Modal demande récapitulatif */}
       {showRecapRequest && (
-        <div className="fixed inset-0 bg-black/70 flex items-end justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center p-4 z-50">
           <div className="card w-full max-w-sm">
             <h2 className="font-semibold mb-2">Demander un récapitulatif</h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Pour obtenir le détail de vos transactions, contactez directement la comptabilité de l'établissement.
             </p>
             <button className="btn-secondary w-full" onClick={() => setShowRecapRequest(false)}>
@@ -219,7 +219,7 @@ export default function ClientDashboard() {
       {/* Modal photo ticket */}
       {photoModal && (
         <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
           onClick={() => setPhotoModal(null)}
         >
           <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
@@ -240,7 +240,7 @@ export default function ClientDashboard() {
 
       {/* Modal contestation */}
       {disputeModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center p-4 z-50">
           <div className="card w-full max-w-sm">
             <h2 className="font-semibold mb-3">Contester cette transaction</h2>
             <form onSubmit={handleDispute} className="space-y-3">

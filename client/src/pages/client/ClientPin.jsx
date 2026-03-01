@@ -39,9 +39,9 @@ export default function ClientPin() {
     <ClientLayout>
       <div className="space-y-4">
         {forced && (
-          <div className="bg-amber-900/40 border border-amber-600 rounded-xl p-4">
-            <p className="text-amber-300 font-semibold text-sm">🔐 Changement de PIN requis</p>
-            <p className="text-amber-200/70 text-xs mt-1">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-amber-700 font-semibold text-sm">🔐 Changement de PIN requis</p>
+            <p className="text-amber-600 text-xs mt-1">
               Pour sécuriser votre compte, vous devez choisir un nouveau PIN personnel avant de continuer.
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function ClientPin() {
                 required
               />
             </div>
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
             <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? 'Modification...' : forced ? 'Confirmer mon PIN' : 'Modifier mon PIN'}
             </button>

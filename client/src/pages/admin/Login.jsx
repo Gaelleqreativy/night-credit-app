@@ -31,7 +31,7 @@ export default function AdminLogin() {
       <div className="card w-full max-w-sm">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">🌙</div>
-          <h1 className="text-2xl font-bold text-indigo-400">Night Credit</h1>
+          <h1 className="text-2xl font-bold text-blue-600">Night Credit</h1>
           <p className="text-gray-500 text-sm mt-1">Espace comptabilité</p>
         </div>
 
@@ -45,8 +45,8 @@ export default function AdminLogin() {
             <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           {error && (
-            <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
           <button type="submit" className="btn-primary w-full" disabled={loading}>
@@ -55,7 +55,7 @@ export default function AdminLogin() {
         </form>
 
         <div className="mt-4 text-center">
-          <a href="/client/login" className="text-sm text-gray-500 hover:text-indigo-400">
+          <a href="/client/login" className="text-sm text-gray-500 hover:text-blue-600">
             → Espace client
           </a>
         </div>

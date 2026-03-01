@@ -67,7 +67,7 @@ export default function AddPaiement() {
             ))}
           </select>
           {selectedClient && (
-            <p className="text-sm mt-1 text-red-300">
+            <p className="text-sm mt-1 text-red-600">
               Solde actuel : {Number(selectedClient.solde || 0).toLocaleString('fr-FR')} FCFA
             </p>
           )}
@@ -99,8 +99,8 @@ export default function AddPaiement() {
                 onClick={() => setForm({ ...form, moyenPaiement: m.value })}
                 className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
                   form.moyenPaiement === m.value
-                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : 'border-night-700 text-gray-400 hover:border-indigo-500'
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'border-gray-200 text-gray-600 hover:border-blue-400'
                 }`}
               >
                 {m.label}

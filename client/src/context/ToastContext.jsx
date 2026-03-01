@@ -28,10 +28,10 @@ export function useToast() {
 }
 
 const STYLES = {
-  success: 'bg-emerald-900 border-emerald-600 text-emerald-100',
-  error: 'bg-red-900 border-red-600 text-red-100',
-  info: 'bg-indigo-900 border-indigo-600 text-indigo-100',
-  warning: 'bg-amber-900 border-amber-600 text-amber-100',
+  success: 'bg-white border-emerald-200 text-emerald-800 shadow-lg',
+  error: 'bg-white border-red-200 text-red-800 shadow-lg',
+  info: 'bg-white border-blue-200 text-blue-800 shadow-lg',
+  warning: 'bg-white border-amber-200 text-amber-800 shadow-lg',
 }
 
 const ICONS = {
