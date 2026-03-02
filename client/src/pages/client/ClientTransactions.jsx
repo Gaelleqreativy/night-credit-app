@@ -8,6 +8,7 @@ export default function ClientTransactions() {
   const [transactions, setTransactions] = useState([])
   const [establishments, setEstablishments] = useState([])
   const [year, setYear] = useState(new Date().getFullYear())
+  const [month, setMonth] = useState('')
   const [establishmentId, setEstablishmentId] = useState('')
   const [type, setType] = useState('')
   const [loading, setLoading] = useState(true)
@@ -27,12 +28,13 @@ export default function ClientTransactions() {
     setLoading(true)
     const params = new URLSearchParams()
     if (year) params.set('year', year)
+    if (year && month) params.set('month', month)
     if (establishmentId) params.set('establishmentId', establishmentId)
     if (type) params.set('type', type)
     api.get(`/transactions/me?${params}`)
       .then((r) => setTransactions(r.data))
       .finally(() => setLoading(false))
-  }, [year, establishmentId, type])
+  }, [year, month, establishmentId, type])
 
   async function handleDispute(e) {
     e.preventDefault()
@@ -62,6 +64,7 @@ export default function ClientTransactions() {
 
         <Filters
           year={year} setYear={setYear}
+          month={month} setMonth={setMonth}
           establishmentId={establishmentId} setEstablishmentId={setEstablishmentId}
           establishments={establishments}
           type={type} setType={setType}

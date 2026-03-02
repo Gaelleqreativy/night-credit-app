@@ -12,7 +12,15 @@ function buildFilters(query, forAdmin = true) {
   if (query.clientId) where.clientId = Number(query.clientId)
   if (query.establishmentId) where.establishmentId = Number(query.establishmentId)
   if (query.type) where.type = query.type
-  if (query.year) {
+  if (query.dateFrom || query.dateTo) {
+    where.date = {}
+    if (query.dateFrom) where.date.gte = new Date(query.dateFrom)
+    if (query.dateTo) {
+      const end = new Date(query.dateTo)
+      end.setHours(23, 59, 59, 999)
+      where.date.lte = end
+    }
+  } else if (query.year) {
     where.date = {
       gte: new Date(`${query.year}-01-01`),
       lte: new Date(`${query.year}-12-31T23:59:59`),
@@ -50,7 +58,18 @@ router.get('/me', authClient, async (req, res) => {
     const where = { clientId: req.client.id }
     if (req.query.establishmentId) where.establishmentId = Number(req.query.establishmentId)
     if (req.query.type) where.type = req.query.type
-    if (req.query.year) {
+    if (req.query.dateFrom || req.query.dateTo) {
+      where.date = {}
+      if (req.query.dateFrom) where.date.gte = new Date(req.query.dateFrom)
+      if (req.query.dateTo) {
+        const end = new Date(req.query.dateTo)
+        end.setHours(23, 59, 59, 999)
+        where.date.lte = end
+      }
+    } else if (req.query.year && req.query.month) {
+      const y = Number(req.query.year), m = Number(req.query.month)
+      where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0, 23, 59, 59) }
+    } else if (req.query.year) {
       where.date = {
         gte: new Date(`${req.query.year}-01-01`),
         lte: new Date(`${req.query.year}-12-31T23:59:59`),

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import api from '../../api/axios'
 import { Download } from 'lucide-react'
+import PeriodPicker from '../../components/PeriodPicker'
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
@@ -9,38 +10,69 @@ const MOYEN_LABELS = {
   ESPECES: 'Espèces', CB: 'Carte bancaire', VIREMENT: 'Virement', CHEQUE: 'Chèque', MOBILE_MONEY: 'Mobile Money'
 }
 
+const CURRENT_YEAR = new Date().getFullYear()
+
 export default function StatsPage() {
   const [stats, setStats] = useState(null)
-  const [year, setYear] = useState(new Date().getFullYear())
+  const [periodParams, setPeriodParams] = useState({ year: CURRENT_YEAR })
+  const [establishmentId, setEstablishmentId] = useState('')
+  const [establishments, setEstablishments] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    api.get('/establishments').then((r) => setEstablishments(r.data))
+  }, [])
+
+  useEffect(() => {
     setLoading(true)
-    api.get(`/stats?year=${year}`).then((r) => setStats(r.data)).finally(() => setLoading(false))
-  }, [year])
+    const params = new URLSearchParams()
+    if (periodParams.year) params.set('year', periodParams.year)
+    if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
+    if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
+    if (establishmentId) params.set('establishmentId', establishmentId)
+    api.get(`/stats?${params}`).then((r) => setStats(r.data)).finally(() => setLoading(false))
+  }, [periodParams, establishmentId])
 
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') }
+
+  function buildExportUrl() {
+    const params = new URLSearchParams()
+    if (periodParams.year) params.set('year', periodParams.year)
+    if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
+    if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
+    if (establishmentId) params.set('establishmentId', establishmentId)
+    params.set('format', 'xlsx')
+    return `/api/export/global?${params}`
+  }
 
   const pieData = stats
     ? Object.entries(stats.moyensPaiement || {}).map(([k, v]) => ({ name: MOYEN_LABELS[k] || k, value: v }))
     : []
 
-  const currentYear = new Date().getFullYear()
+  const isYearMode = periodParams.year && !periodParams.dateFrom
 
   if (loading) return <div className="text-gray-500 text-center py-20">Chargement...</div>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">Statistiques</h1>
-        <div className="flex gap-2">
-          <select className="input w-auto text-sm" value={year} onChange={(e) => setYear(e.target.value)}>
-            {[currentYear, currentYear - 1, currentYear - 2, currentYear - 3].map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <button onClick={() => window.open(`/api/export/global?format=xlsx&year=${year}`, '_blank')} className="btn-secondary text-sm">
-            <Download size={14} className="inline mr-1.5" />Export global Excel
+        <div className="flex flex-wrap gap-2 items-center">
+          <PeriodPicker onChange={setPeriodParams} />
+          {establishments.length > 0 && (
+            <select
+              className="input w-auto text-sm"
+              value={establishmentId}
+              onChange={(e) => setEstablishmentId(e.target.value)}
+            >
+              <option value="">Tous les établissements</option>
+              {establishments.map((e) => (
+                <option key={e.id} value={e.id}>{e.name}</option>
+              ))}
+            </select>
+          )}
+          <button onClick={() => window.open(buildExportUrl(), '_blank')} className="btn-secondary text-sm">
+            <Download size={14} className="inline mr-1.5" />Export Excel
           </button>
         </div>
       </div>
@@ -60,23 +92,25 @@ export default function StatsPage() {
         ))}
       </div>
 
-      {/* Évolution mensuelle */}
-      <div className="card">
-        <h2 className="font-semibold mb-4">Évolution mensuelle {year}</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={stats?.monthly || []}>
-            <XAxis dataKey="label" stroke="#9ca3af" />
-            <YAxis stroke="#9ca3af" tickFormatter={(v) => fmt(v)} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-              labelStyle={{ color: '#111827', fontWeight: 600 }}
-              formatter={(v, n) => [fmt(v) + ' FCFA', n === 'conso' ? 'Consommations' : 'Paiements']}
-            />
-            <Bar dataKey="conso" fill="#2563eb" radius={[4, 4, 0, 0]} name="conso" />
-            <Bar dataKey="paiement" fill="#10b981" radius={[4, 4, 0, 0]} name="paiement" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Évolution mensuelle — seulement en mode année */}
+      {isYearMode && (
+        <div className="card">
+          <h2 className="font-semibold mb-4">Évolution mensuelle {periodParams.year}</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={stats?.monthly || []}>
+              <XAxis dataKey="label" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" tickFormatter={(v) => fmt(v)} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                labelStyle={{ color: '#111827', fontWeight: 600 }}
+                formatter={(v, n) => [fmt(v) + ' FCFA', n === 'conso' ? 'Consommations' : 'Paiements']}
+              />
+              <Bar dataKey="conso" fill="#2563eb" radius={[4, 4, 0, 0]} name="conso" />
+              <Bar dataKey="paiement" fill="#10b981" radius={[4, 4, 0, 0]} name="paiement" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Top débiteurs */}
@@ -92,6 +126,9 @@ export default function StatsPage() {
                 <span className="text-red-600 text-sm font-semibold">{fmt(c.solde)} FCFA</span>
               </div>
             ))}
+            {!stats?.top10?.length && (
+              <p className="text-gray-500 text-sm text-center py-4">Aucun débiteur</p>
+            )}
           </div>
         </div>
 

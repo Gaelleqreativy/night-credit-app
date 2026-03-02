@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import api from '../../api/axios'
 import { SkeletonStat } from '../../components/Skeleton'
 import { useAuth } from '../../context/AuthContext'
+import PeriodPicker from '../../components/PeriodPicker'
 import { AlertTriangle, ArrowRight, Banknote, CreditCard, UtensilsCrossed, Users } from 'lucide-react'
 
 const CURRENT_YEAR = new Date().getFullYear()
-const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
 
 function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
   const colorMap = {
@@ -28,8 +28,8 @@ function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
   return link ? <Link to={link}>{card}</Link> : card
 }
 
-// ── Vue MANAGER : ses établissements uniquement ──────────────────────────────
-function ManagerDashboard({ stats, loading, year, setYear }) {
+// ── Vue MANAGER ───────────────────────────────────────────────────────────────
+function ManagerDashboard({ stats, loading, periodParams, setPeriodParams }) {
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }
 
   const establishments = stats?.byEstablishment || []
@@ -40,18 +40,15 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Mes établissements</h1>
           <p className="text-sm text-gray-500 mt-0.5">Vue lecture seule</p>
         </div>
-        <select className="input w-auto text-sm" value={year} onChange={(e) => setYear(e.target.value)}>
-          {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-          <option value="">Toutes années</option>
-        </select>
+        <PeriodPicker onChange={setPeriodParams} />
       </div>
 
-      {/* KPI synthèse */}
+      {/* KPI */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => <SkeletonStat key={i} />)}
@@ -78,7 +75,6 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
             const taux = e.totalConso > 0 ? Math.round(((e.totalPaiement || 0) / e.totalConso) * 100) : 0
             return (
               <div key={e.id} className="card space-y-4">
-                {/* En-tête établissement */}
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="font-semibold text-lg">{e.name}</h2>
@@ -89,8 +85,6 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
                     <p className="text-xs text-gray-500">solde dû</p>
                   </div>
                 </div>
-
-                {/* Barre de progression */}
                 <div>
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>Consommations</span>
@@ -100,8 +94,6 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
                     <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-
-                {/* Stats ligne */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-50 rounded-xl p-3">
                     <p className="text-xs text-gray-500">Encaissé</p>
@@ -121,23 +113,34 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
   )
 }
 
-// ── Vue ADMIN / COMPTABLE ────────────────────────────────────────────────────
+// ── Vue ADMIN / COMPTABLE ─────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { adminUser } = useAuth()
   const isManager = adminUser?.role === 'MANAGER'
   const [stats, setStats] = useState(null)
-  const [year, setYear] = useState(CURRENT_YEAR)
+  const [periodParams, setPeriodParams] = useState({ year: CURRENT_YEAR })
+  const [establishmentId, setEstablishmentId] = useState('')
+  const [establishments, setEstablishments] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isManager) api.get('/establishments').then((r) => setEstablishments(r.data))
+  }, [isManager])
+
+  useEffect(() => {
     setLoading(true)
-    api.get(`/stats?year=${year}`)
+    const params = new URLSearchParams()
+    if (periodParams.year) params.set('year', periodParams.year)
+    if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
+    if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
+    if (!isManager && establishmentId) params.set('establishmentId', establishmentId)
+    api.get(`/stats?${params}`)
       .then((r) => setStats(r.data))
       .finally(() => setLoading(false))
-  }, [year])
+  }, [periodParams, establishmentId, isManager])
 
   if (isManager) {
-    return <ManagerDashboard stats={stats} loading={loading} year={year} setYear={setYear} />
+    return <ManagerDashboard stats={stats} loading={loading} periodParams={periodParams} setPeriodParams={setPeriodParams} />
   }
 
   function fmt(n) {
@@ -150,21 +153,28 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* En-tête + filtres */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="text-2xl font-bold">Tableau de bord</h1>
-        <select
-          className="input w-auto text-sm"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-        >
-          {YEARS.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-          <option value="">Toutes années</option>
-        </select>
+        <div className="flex flex-wrap gap-2 items-center">
+          <PeriodPicker onChange={setPeriodParams} />
+          {establishments.length > 0 && (
+            <select
+              className="input w-auto text-sm"
+              value={establishmentId}
+              onChange={(e) => setEstablishmentId(e.target.value)}
+            >
+              <option value="">Tous les établissements</option>
+              {establishments.map((e) => (
+                <option key={e.id} value={e.id}>{e.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
 
-      {/* Alertes */}
+      {/* Alerte contestations */}
       {stats?.contestationsOuvertes > 0 && (
         <Link to="/admin/disputes" className="block">
           <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-red-700 text-sm flex items-center gap-2 hover:bg-red-100 transition-colors">
