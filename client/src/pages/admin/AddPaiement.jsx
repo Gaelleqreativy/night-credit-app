@@ -92,7 +92,7 @@ export default function AddPaiement() {
         </div>
         <div>
           <label className="label">Moyen de paiement *</label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {MOYENS.map((m) => (
               <button
                 key={m.value}

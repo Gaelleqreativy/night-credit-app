@@ -155,6 +155,7 @@ export default function DisputesPage() {
           ) : open.length === 0 ? (
             <p className="text-center py-6 text-gray-500">Aucune contestation ouverte</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100">
                 <tr className="text-gray-500">
@@ -187,6 +188,7 @@ export default function DisputesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -197,6 +199,7 @@ export default function DisputesPage() {
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="font-semibold text-gray-500">Contestations traitées ({resolved.length})</h2>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100">
               <tr className="text-gray-500">
@@ -232,6 +235,7 @@ export default function DisputesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

@@ -53,6 +53,7 @@ export default function UsersPage() {
       </div>
 
       <div className="card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100">
             <tr className="text-gray-500">
@@ -81,6 +82,7 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showModal && (

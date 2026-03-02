@@ -53,11 +53,11 @@ function ManagerDashboard({ stats, loading, year, setYear }) {
 
       {/* KPI synthèse */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => <SkeletonStat key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard label="Solde total dû" value={fmt(totalDu)} color="red" icon={<Banknote size={18} />} />
           <StatCard label="Consommations" value={fmt(totalConso)} color="indigo" icon={<UtensilsCrossed size={18} />} />
           <StatCard label="Encaissé" value={fmt(totalPaiement)} color="emerald" icon={<CreditCard size={18} />} />
