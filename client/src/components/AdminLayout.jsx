@@ -158,7 +158,7 @@ export default function AdminLayout() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon size={18} className="text-blue-600" />
-              <h1 className="text-lg font-bold text-blue-600">Night Credit</h1>
+              <h1 className="text-lg font-bold text-blue-600">SpiritTab</h1>
             </div>
             <div className="flex items-center gap-1">
               <span className="hidden lg:block"><NotificationBell /></span>
@@ -238,7 +238,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex items-center gap-2">
             <Moon size={16} className="text-blue-600" />
-            <span className="font-bold text-blue-600 text-sm">Night Credit</span>
+            <span className="font-bold text-blue-600 text-sm">SpiritTab</span>
           </div>
           <NotificationBell />
         </div>

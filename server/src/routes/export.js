@@ -223,7 +223,7 @@ const C = {
 function pdfHeader(doc, subtitle) {
   doc.rect(0, 0, PW, 50).fill(C.bg)
   doc.fill('white').font('Helvetica-Bold').fontSize(14)
-     .text('NIGHT CREDIT', ML, 14, { lineBreak: false })
+     .text('SPIRITTAB', ML, 14, { lineBreak: false })
   if (subtitle) {
     doc.fill('rgba(255,255,255,0.75)').font('Helvetica').fontSize(8)
        .text(subtitle, ML, 32, { lineBreak: false })
@@ -239,7 +239,7 @@ function pdfFooter(doc, pageNum) {
   doc.fill(C.gray).font('Helvetica').fontSize(7)
      .text(`Page ${pageNum}`, ML, fy + 3, { lineBreak: false })
   doc.fill(C.gray).fontSize(7)
-     .text('Night Credit — Document confidentiel', 0, fy + 3, { align: 'right', width: PW - MR })
+     .text('SpiritTab — Document confidentiel', 0, fy + 3, { align: 'right', width: PW - MR })
 }
 
 function buildClientPdf(res, client, transactions, totalConso, totalPaiement, solde, period) {

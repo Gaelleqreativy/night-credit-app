@@ -26,10 +26,10 @@ async function main() {
   // Admin user
   const hashedPassword = await bcrypt.hash('admin1234', 10)
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@nightcredit.com' },
+    where: { email: 'admin@spirittab.com' },
     update: {},
     create: {
-      email: 'admin@nightcredit.com',
+      email: 'admin@spirittab.com',
       password: hashedPassword,
       name: 'Administrateur',
       role: 'ADMIN',
@@ -46,10 +46,10 @@ async function main() {
   // Comptable user
   const hashedPassword2 = await bcrypt.hash('comptable1234', 10)
   await prisma.user.upsert({
-    where: { email: 'comptable@nightcredit.com' },
+    where: { email: 'comptable@spirittab.com' },
     update: {},
     create: {
-      email: 'comptable@nightcredit.com',
+      email: 'comptable@spirittab.com',
       password: hashedPassword2,
       name: 'Marie Dupont',
       role: 'COMPTABLE',
@@ -60,8 +60,8 @@ async function main() {
   })
 
   console.log('✅ Seed terminé !')
-  console.log('   Admin    : admin@nightcredit.com / admin1234')
-  console.log('   Comptable: comptable@nightcredit.com / comptable1234')
+  console.log('   Admin    : admin@spirittab.com / admin1234')
+  console.log('   Comptable: comptable@spirittab.com / comptable1234')
   console.log('   3 établissements créés')
 }
 

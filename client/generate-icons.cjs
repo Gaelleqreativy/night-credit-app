@@ -1,5 +1,5 @@
 /**
- * Génère les icônes PNG pour la PWA Night Credit
+ * Génère les icônes PNG pour la PWA SpiritTab
  * Utilise Jimp (pur JS, pas de dépendances natives)
  * Usage : node generate-icons.cjs
  */
@@ -10,7 +10,7 @@ const fs = require('fs')
 const OUT = path.join(__dirname, 'public')
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT)
 
-// Couleurs Night Credit
+// Couleurs SpiritTab
 const BG    = 0x1e1b4bff  // indigo foncé
 const LIGHT = 0xe0e7ffff  // bleu clair (lune)
 const ACCT  = 0x818cf8ff  // violet accent
@@ -89,7 +89,7 @@ async function generateAppleIcon() {
 }
 
 ;(async () => {
-  console.log('Génération des icônes PWA Night Credit...')
+  console.log('Génération des icônes PWA SpiritTab...')
   await generateIcon(192)
   await generateIcon(512)
   await generateAppleIcon()

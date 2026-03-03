@@ -1,4 +1,4 @@
-# Night Credit — Guide d'installation
+# SpiritTab — Guide d'installation
 
 ## Prérequis
 
@@ -61,8 +61,8 @@ npm run dev
 
 | Rôle | Email | Mot de passe |
 |------|-------|-------------|
-| Admin | admin@nightcredit.com | admin1234 |
-| Comptable | comptable@nightcredit.com | comptable1234 |
+| Admin | admin@spirittab.com | admin1234 |
+| Comptable | comptable@spirittab.com | comptable1234 |
 
 **Établissements créés :** Club Étoile, Le Palace, Night Lounge
 
@@ -108,7 +108,7 @@ Pour installer l'application sur un téléphone Android/iOS :
 ## Structure du projet
 
 ```
-night-credit-app/
+spirittab/
 ├── server/          → Backend Node.js + Express + Prisma
 │   ├── prisma/      → Schéma BDD + seed
 │   ├── src/

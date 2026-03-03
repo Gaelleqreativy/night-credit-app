@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Night Credit',
-        short_name: 'NightCredit',
-        description: 'Gestion de crédits pour établissements de nuit',
+        name: 'SpiritTab',
+        short_name: 'SpiritTab',
+        description: "Gestion d'ardoises et crédits clients pour bars et établissements",
         theme_color: '#1e1b4b',
         background_color: '#0f0f1a',
         display: 'standalone',
