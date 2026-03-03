@@ -33,9 +33,10 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true, // expose sur le réseau local (accès depuis un vrai mobile)
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/uploads': 'http://localhost:3001',
+      '/api': { target: 'http://localhost:3001', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },
 })
