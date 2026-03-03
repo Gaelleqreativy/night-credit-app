@@ -58,23 +58,16 @@ router.get('/me', authClient, async (req, res) => {
     const where = { clientId: req.client.id }
     if (req.query.establishmentId) where.establishmentId = Number(req.query.establishmentId)
     if (req.query.type) where.type = req.query.type
-    if (req.query.dateFrom || req.query.dateTo) {
-      where.date = {}
-      if (req.query.dateFrom) where.date.gte = new Date(req.query.dateFrom)
-      if (req.query.dateTo) {
-        const end = new Date(req.query.dateTo)
-        end.setHours(23, 59, 59, 999)
-        where.date.lte = end
-      }
-    } else if (req.query.year && req.query.month) {
-      const y = Number(req.query.year), m = Number(req.query.month)
-      where.date = { gte: new Date(y, m - 1, 1), lte: new Date(y, m, 0, 23, 59, 59) }
-    } else if (req.query.year) {
-      where.date = {
-        gte: new Date(`${req.query.year}-01-01`),
-        lte: new Date(`${req.query.year}-12-31T23:59:59`),
-      }
-    }
+    // Limite stricte : 15 jours maximum (appliquée côté serveur)
+    const limit15 = new Date()
+    limit15.setDate(limit15.getDate() - 15)
+    limit15.setHours(0, 0, 0, 0)
+
+    // Si le client envoie un dateFrom plus ancien que 15 jours, on le plafonne
+    if (where.date?.gte && where.date.gte < limit15) where.date.gte = limit15
+    // Si aucun filtre de date, on impose la limite de 15 jours
+    if (!where.date) where.date = { gte: limit15 }
+    else if (!where.date.gte) where.date.gte = limit15
 
     const transactions = await prisma.transaction.findMany({
       where,

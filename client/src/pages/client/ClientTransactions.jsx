@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
 import ClientLayout from '../../components/ClientLayout'
-import { Camera, AlertTriangle } from 'lucide-react'
-import Filters from '../../components/Filters'
+import { Camera, AlertTriangle, Clock } from 'lucide-react'
 import api from '../../api/axios'
 
 export default function ClientTransactions() {
   const [transactions, setTransactions] = useState([])
   const [establishments, setEstablishments] = useState([])
-  const [year, setYear] = useState(new Date().getFullYear())
-  const [month, setMonth] = useState('')
   const [establishmentId, setEstablishmentId] = useState('')
   const [type, setType] = useState('')
   const [loading, setLoading] = useState(true)
@@ -17,7 +14,7 @@ export default function ClientTransactions() {
   const [disputeLoading, setDisputeLoading] = useState(false)
 
   useEffect(() => {
-    // Récupérer les établissements visités
+    // Récupérer les établissements visités (limités aux 15 derniers jours par le serveur)
     api.get('/transactions/me').then((r) => {
       const etabs = [...new Map(r.data.map((t) => [t.establishment.id, t.establishment])).values()]
       setEstablishments(etabs)
@@ -27,14 +24,12 @@ export default function ClientTransactions() {
   useEffect(() => {
     setLoading(true)
     const params = new URLSearchParams()
-    if (year) params.set('year', year)
-    if (year && month) params.set('month', month)
     if (establishmentId) params.set('establishmentId', establishmentId)
     if (type) params.set('type', type)
     api.get(`/transactions/me?${params}`)
       .then((r) => setTransactions(r.data))
       .finally(() => setLoading(false))
-  }, [year, month, establishmentId, type])
+  }, [establishmentId, type])
 
   async function handleDispute(e) {
     e.preventDefault()
@@ -60,15 +55,37 @@ export default function ClientTransactions() {
   return (
     <ClientLayout>
       <div className="space-y-4">
-        <h1 className="text-xl font-bold">Mes transactions</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Mes transactions</h1>
+          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1">
+            <Clock size={12} />
+            15 derniers jours
+          </span>
+        </div>
 
-        <Filters
-          year={year} setYear={setYear}
-          month={month} setMonth={setMonth}
-          establishmentId={establishmentId} setEstablishmentId={setEstablishmentId}
-          establishments={establishments}
-          type={type} setType={setType}
-        />
+        <div className="flex flex-wrap gap-2">
+          {establishments.length > 1 && (
+            <select
+              className="input w-auto text-sm"
+              value={establishmentId}
+              onChange={(e) => setEstablishmentId(e.target.value)}
+            >
+              <option value="">Tous les établissements</option>
+              {establishments.map((e) => (
+                <option key={e.id} value={e.id}>{e.name}</option>
+              ))}
+            </select>
+          )}
+          <select
+            className="input w-auto text-sm"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option value="">Tous les types</option>
+            <option value="CONSOMMATION">Consommations</option>
+            <option value="PAIEMENT">Paiements</option>
+          </select>
+        </div>
 
         {/* Résumé période */}
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
