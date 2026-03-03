@@ -14,6 +14,7 @@ import ImportPage from './pages/admin/Import'
 import AuditPage from './pages/admin/Audit'
 import UsersPage from './pages/admin/Users'
 import DisputesPage from './pages/admin/Disputes'
+import EstablishmentsPage from './pages/admin/Establishments'
 
 // Client pages
 import ClientLogin from './pages/client/ClientLogin'
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="audit" element={<AuditPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="disputes" element={<DisputesPage />} />
+        <Route path="establishments" element={<EstablishmentsPage />} />
       </Route>
 
       {/* Client */}

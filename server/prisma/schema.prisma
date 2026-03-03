@@ -11,6 +11,7 @@ model Establishment {
   id           Int           @id @default(autoincrement())
   name         String
   address      String?
+  logoUrl      String?
   transactions Transaction[]
   users        UserEstablishment[]
   createdAt    DateTime      @default(now())

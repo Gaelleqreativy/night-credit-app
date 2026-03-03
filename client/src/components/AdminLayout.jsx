@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import {
   LayoutDashboard, Users, UtensilsCrossed, CreditCard, TrendingUp,
-  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, Moon, LogOut, Menu, X,
+  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, Moon, LogOut, Menu, X, Building2,
 } from 'lucide-react'
 
 const navItems = [
@@ -25,6 +25,7 @@ const managerItems = [
 ]
 
 const adminOnlyItems = [
+  { to: '/admin/establishments', label: 'Établissements', Icon: Building2 },
   { to: '/admin/users', label: 'Utilisateurs', Icon: KeyRound },
   { to: '/admin/audit', label: 'Journal audit', Icon: ClipboardList },
 ]

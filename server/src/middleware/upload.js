@@ -22,6 +22,13 @@ const fileFilter = (req, file, cb) => {
 
 const uploadTicket = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } })
 
+const logoFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase()
+  if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) cb(null, true)
+  else cb(new Error('Format non supporté. Utilisez JPG, PNG ou WEBP'))
+}
+const uploadLogo = multer({ storage, fileFilter: logoFilter, limits: { fileSize: 2 * 1024 * 1024 } })
+
 const storageExcel = multer.memoryStorage()
 const uploadExcel = multer({
   storage: storageExcel,
@@ -33,4 +40,4 @@ const uploadExcel = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
 })
 
-module.exports = { uploadTicket, uploadExcel }
+module.exports = { uploadTicket, uploadExcel, uploadLogo }
