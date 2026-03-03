@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "build": "cd client && npm install && npm run build && cd ../server && npm install && npx prisma generate",
-    "start": "cd server && npx prisma migrate deploy && node src/index.js"
+    "start": "cd server && npx prisma migrate deploy && node prisma/seed.js && node src/index.js"
   }
 }
