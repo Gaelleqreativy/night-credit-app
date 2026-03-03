@@ -141,7 +141,7 @@ router.put('/me/pin', authClient, async (req, res) => {
 
   const client = await prisma.client.findUnique({ where: { id: req.client.id } })
   const valid = await bcrypt.compare(currentPin, client.pin)
-  if (!valid) return res.status(401).json({ error: 'PIN actuel incorrect' })
+  if (!valid) return res.status(400).json({ error: 'PIN actuel incorrect' })
 
   const hashedPin = await bcrypt.hash(newPin, 10)
   await prisma.client.update({ where: { id: req.client.id }, data: { pin: hashedPin, pinMustChange: false } })

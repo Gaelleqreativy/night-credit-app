@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Lock, CheckCircle2 } from 'lucide-react'
 import ClientLayout from '../../components/ClientLayout'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
@@ -12,20 +12,21 @@ export default function ClientPin() {
 
   const [form, setForm] = useState({ currentPin: '', newPin: '', confirmPin: '' })
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     if (!/^\d{4}$/.test(form.newPin)) return setError('Le nouveau PIN doit être exactement 4 chiffres')
-    if (form.newPin === (forced ? '0000' : null) && forced) return setError('Vous ne pouvez pas garder le PIN par défaut')
     if (form.newPin !== form.confirmPin) return setError('Les deux PIN ne correspondent pas')
     setLoading(true)
     try {
       await api.put('/clients/me/pin', { currentPin: form.currentPin, newPin: form.newPin })
       updateClientData({ pinMustChange: false })
+      setSuccess(true)
       if (forced) {
-        navigate('/client/dashboard')
+        setTimeout(() => navigate('/client/dashboard'), 1500)
       } else {
         setForm({ currentPin: '', newPin: '', confirmPin: '' })
       }
@@ -93,7 +94,13 @@ export default function ClientPin() {
               />
             </div>
             {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
+            {success && (
+              <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm">
+                <CheckCircle2 size={16} className="shrink-0" />
+                PIN modifié avec succès !{forced && ' Redirection en cours…'}
+              </div>
+            )}
+            <button type="submit" className="btn-primary w-full" disabled={loading || success}>
               {loading ? 'Modification...' : forced ? 'Confirmer mon PIN' : 'Modifier mon PIN'}
             </button>
             {forced && (
