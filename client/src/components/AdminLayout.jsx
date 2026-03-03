@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import {
   LayoutDashboard, Users, UtensilsCrossed, CreditCard, TrendingUp,
-  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, Moon, LogOut, Menu, X, Building2,
+  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, LogOut, Menu, X, Building2,
 } from 'lucide-react'
 
 const navItems = [
@@ -157,8 +157,8 @@ export default function AdminLayout() {
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Moon size={18} className="text-blue-600" />
-              <h1 className="text-lg font-bold text-blue-600">SpiritTab</h1>
+              <img src="/Spirit-Group.png" alt="SpiritTab" className="h-7 object-contain" />
+              <h1 className="text-lg font-bold text-gray-800">SpiritTab</h1>
             </div>
             <div className="flex items-center gap-1">
               <span className="hidden lg:block"><NotificationBell /></span>
@@ -237,8 +237,8 @@ export default function AdminLayout() {
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-2">
-            <Moon size={16} className="text-blue-600" />
-            <span className="font-bold text-blue-600 text-sm">SpiritTab</span>
+            <img src="/Spirit-Group.png" alt="SpiritTab" className="h-5 object-contain" />
+            <span className="font-bold text-gray-800 text-sm">SpiritTab</span>
           </div>
           <NotificationBell />
         </div>

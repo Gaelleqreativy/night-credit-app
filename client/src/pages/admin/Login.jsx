@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
-import { Moon, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -31,8 +31,8 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-2"><Moon size={36} className="text-blue-600" /></div>
-          <h1 className="text-2xl font-bold text-blue-600">SpiritTab</h1>
+          <img src="/Spirit-Group.png" alt="SpiritTab" className="h-16 mx-auto mb-2 object-contain" />
+          <h1 className="text-2xl font-bold text-gray-800">SpiritTab</h1>
           <p className="text-gray-500 text-sm mt-1">Espace comptabilité</p>
         </div>
 
