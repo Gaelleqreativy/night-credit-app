@@ -58,16 +58,15 @@ router.get('/me', authClient, async (req, res) => {
     const where = { clientId: req.client.id }
     if (req.query.establishmentId) where.establishmentId = Number(req.query.establishmentId)
     if (req.query.type) where.type = req.query.type
-    // Limite stricte : 30 jours maximum (appliquée côté serveur)
-    const limit30 = new Date()
-    limit30.setDate(limit30.getDate() - 30)
-    limit30.setHours(0, 0, 0, 0)
-
-    // Si le client envoie un dateFrom plus ancien que 30 jours, on le plafonne
-    if (where.date?.gte && where.date.gte < limit30) where.date.gte = limit30
-    // Si aucun filtre de date, on impose la limite de 30 jours
-    if (!where.date) where.date = { gte: limit30 }
-    else if (!where.date.gte) where.date.gte = limit30
+    // Limite 30 jours — uniquement pour l'onglet Historique (?history=1)
+    // Le Dashboard envoie la requête sans ce param pour calculer le solde réel
+    if (req.query.history) {
+      const limit30 = new Date()
+      limit30.setDate(limit30.getDate() - 30)
+      limit30.setHours(0, 0, 0, 0)
+      if (!where.date) where.date = { gte: limit30 }
+      else if (!where.date.gte || where.date.gte < limit30) where.date.gte = limit30
+    }
 
     const transactions = await prisma.transaction.findMany({
       where,

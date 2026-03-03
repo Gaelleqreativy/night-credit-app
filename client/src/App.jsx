@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 
@@ -32,7 +32,12 @@ function AdminRoute({ children }) {
 
 function ClientRoute({ children }) {
   const { clientData } = useAuth()
-  return clientData ? children : <Navigate to="/client/login" replace />
+  const { pathname } = useLocation()
+  if (!clientData) return <Navigate to="/client/login" replace />
+  // Si le PIN doit être changé, bloquer l'accès à toute autre page client
+  if (clientData.pinMustChange && pathname !== '/client/pin')
+    return <Navigate to="/client/pin" replace />
+  return children
 }
 
 function AppRoutes() {

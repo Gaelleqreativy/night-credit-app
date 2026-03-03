@@ -14,8 +14,8 @@ export default function ClientTransactions() {
   const [disputeLoading, setDisputeLoading] = useState(false)
 
   useEffect(() => {
-    // Récupérer les établissements visités (limités aux 30 derniers jours par le serveur)
-    api.get('/transactions/me').then((r) => {
+    // Établissements visités dans les 30 derniers jours
+    api.get('/transactions/me?history=1').then((r) => {
       const etabs = [...new Map(r.data.map((t) => [t.establishment.id, t.establishment])).values()]
       setEstablishments(etabs)
     })
@@ -23,7 +23,7 @@ export default function ClientTransactions() {
 
   useEffect(() => {
     setLoading(true)
-    const params = new URLSearchParams()
+    const params = new URLSearchParams({ history: '1' })
     if (establishmentId) params.set('establishmentId', establishmentId)
     if (type) params.set('type', type)
     api.get(`/transactions/me?${params}`)
