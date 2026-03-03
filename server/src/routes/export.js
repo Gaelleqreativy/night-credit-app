@@ -14,17 +14,23 @@ function formatAmount(n) {
   return n != null ? Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '-'
 }
 
-// GET /api/export/client/:id?format=xlsx|pdf&year=2024
+// GET /api/export/client/:id?format=xlsx|pdf&year=2024&dateFrom=&dateTo=
 router.get('/client/:id', authAdmin, async (req, res) => {
-  const { format = 'xlsx', year } = req.query
+  const { format = 'xlsx', year, dateFrom, dateTo } = req.query
   try {
     const client = await prisma.client.findUnique({ where: { id: Number(req.params.id) } })
     if (!client) return res.status(404).json({ error: 'Client introuvable' })
 
-    const where = { clientId: client.id }
-    if (year) {
-      where.date = { gte: new Date(`${year}-01-01`), lte: new Date(`${year}-12-31T23:59:59`) }
+    let dateRange = undefined
+    if (dateFrom || dateTo) {
+      dateRange = {}
+      if (dateFrom) dateRange.gte = new Date(dateFrom)
+      if (dateTo) { const end = new Date(dateTo); end.setHours(23, 59, 59, 999); dateRange.lte = end }
+    } else if (year) {
+      dateRange = { gte: new Date(`${year}-01-01`), lte: new Date(`${year}-12-31T23:59:59`) }
     }
+
+    const where = { clientId: client.id, ...(dateRange ? { date: dateRange } : {}) }
     if (req.user.role === 'MANAGER' && req.user.establishmentIds?.length) {
       where.establishmentId = { in: req.user.establishmentIds }
     }
@@ -39,7 +45,8 @@ router.get('/client/:id', authAdmin, async (req, res) => {
     const totalPaiement = transactions.filter((t) => t.type === 'PAIEMENT').reduce((s, t) => s + (t.paiement || 0), 0)
     const solde = Math.max(0, totalConso - totalPaiement)
 
-    const filename = `client_${client.lastName}_${client.firstName}${year ? '_' + year : ''}`
+    const periodSuffix = dateFrom ? `_${dateFrom}_${dateTo || ''}` : year ? `_${year}` : ''
+    const filename = `client_${client.lastName}_${client.firstName}${periodSuffix}`
 
     if (format === 'xlsx') {
       const headers = ['Date', 'Établissement', 'Réf. Ticket', 'Consommation', 'Paiement', 'Moyen de paiement', 'Notes']
@@ -75,7 +82,8 @@ router.get('/client/:id', authAdmin, async (req, res) => {
 
       doc.fontSize(18).text(`Fiche client : ${client.firstName} ${client.lastName}`, { align: 'center' })
       doc.fontSize(11).text(`Téléphone : ${client.phone}`, { align: 'center' })
-      if (year) doc.text(`Année : ${year}`, { align: 'center' })
+      const periodLabel = dateFrom && dateTo ? `${dateFrom} – ${dateTo}` : year ? String(year) : null
+    if (periodLabel) doc.text(`Période : ${periodLabel}`, { align: 'center' })
       doc.moveDown()
       doc.fontSize(12).text(`Solde dû : ${formatAmount(solde)} €`, { underline: true })
       doc.moveDown()
@@ -128,15 +136,24 @@ router.get('/client/:id', authAdmin, async (req, res) => {
   }
 })
 
-// GET /api/export/global?format=xlsx|pdf&year=2024
+// GET /api/export/global?format=xlsx|pdf&year=2024&dateFrom=&dateTo=&establishmentId=
 router.get('/global', authAdmin, async (req, res) => {
-  const { format = 'xlsx', year } = req.query
+  const { format = 'xlsx', year, dateFrom, dateTo, establishmentId } = req.query
   try {
-    const where = year
-      ? { date: { gte: new Date(`${year}-01-01`), lte: new Date(`${year}-12-31T23:59:59`) } }
-      : {}
+    let dateRange = undefined
+    if (dateFrom || dateTo) {
+      dateRange = {}
+      if (dateFrom) dateRange.gte = new Date(dateFrom)
+      if (dateTo) { const end = new Date(dateTo); end.setHours(23, 59, 59, 999); dateRange.lte = end }
+    } else if (year) {
+      dateRange = { gte: new Date(`${year}-01-01`), lte: new Date(`${year}-12-31T23:59:59`) }
+    }
+
+    const where = dateRange ? { date: dateRange } : {}
     if (req.user.role === 'MANAGER' && req.user.establishmentIds?.length) {
       where.establishmentId = { in: req.user.establishmentIds }
+    } else if (req.user.role !== 'MANAGER' && establishmentId) {
+      where.establishmentId = Number(establishmentId)
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -167,7 +184,8 @@ router.get('/global', authAdmin, async (req, res) => {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
       XLSX.utils.book_append_sheet(wb, ws, 'Global')
       const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
-      const filename = `rapport_global${year ? '_' + year : ''}.xlsx`
+      const periodSuffix = dateFrom ? `_${dateFrom}_${dateTo || ''}` : year ? `_${year}` : ''
+      const filename = `rapport_global${periodSuffix}.xlsx`
       res.setHeader('Content-Disposition', `attachment; filename=${filename}`)
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       return res.send(buf)

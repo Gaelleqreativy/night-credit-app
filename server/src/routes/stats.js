@@ -4,7 +4,7 @@ const { authAdmin } = require('../middleware/auth')
 
 const prisma = new PrismaClient()
 
-// GET /api/stats — statistiques globales
+// GET /api/stats
 router.get('/', authAdmin, async (req, res) => {
   try {
     const { year, month, dateFrom, dateTo, establishmentId } = req.query
@@ -29,37 +29,51 @@ router.get('/', authAdmin, async (req, res) => {
       }
     }
 
-    const where = dateRange ? { date: dateRange } : {}
-
     const isManager = req.user.role === 'MANAGER'
     const managerEtabIds = req.user.establishmentIds || []
+
+    // Filtre de base (date + établissement) — utilisé pour toutes les requêtes
+    const where = dateRange ? { date: dateRange } : {}
     if (isManager && managerEtabIds.length) {
       where.establishmentId = { in: managerEtabIds }
     } else if (!isManager && establishmentId) {
       where.establishmentId = Number(establishmentId)
     }
 
-    // Totaux globaux
+    // ── Totaux globaux ────────────────────────────────────────────────────────
     const allTx = await prisma.transaction.findMany({ where })
     const totalConso = allTx.filter((t) => t.type === 'CONSOMMATION').reduce((s, t) => s + (t.consommation || 0), 0)
     const totalPaiement = allTx.filter((t) => t.type === 'PAIEMENT').reduce((s, t) => s + (t.paiement || 0), 0)
     const totalDu = Math.max(0, totalConso - totalPaiement)
 
-    // Clients actifs (solde > 0)
-    const clientsFilter = isManager && managerEtabIds.length
+    // ── Clients — scoped au filtre courant (date + établissement) ─────────────
+    // On ne charge que les clients qui ont au moins une transaction dans le périmètre,
+    // et on inclut uniquement leurs transactions filtrées pour calculer les soldes.
+    const clientEstabFilter = isManager && managerEtabIds.length
       ? { transactions: { some: { establishmentId: { in: managerEtabIds } } } }
+      : !isManager && establishmentId
+      ? { transactions: { some: { establishmentId: Number(establishmentId) } } }
       : {}
-    const allClients = await prisma.client.findMany({ where: clientsFilter, include: { transactions: true } })
+
+    const allClients = await prisma.client.findMany({
+      where: clientEstabFilter,
+      include: { transactions: { where } },
+    })
+
     const clientsActifs = allClients.filter((c) => {
       const conso = c.transactions.filter((t) => t.type === 'CONSOMMATION').reduce((s, t) => s + (t.consommation || 0), 0)
       const paid = c.transactions.filter((t) => t.type === 'PAIEMENT').reduce((s, t) => s + (t.paiement || 0), 0)
       return conso - paid > 0
     }).length
 
-    // Par établissement
-    const etabs = await prisma.establishment.findMany(
-      isManager && managerEtabIds.length ? { where: { id: { in: managerEtabIds } } } : {}
-    )
+    // ── Par établissement — restreint à l'établissement sélectionné ──────────
+    const etabsQuery = isManager && managerEtabIds.length
+      ? { where: { id: { in: managerEtabIds } } }
+      : !isManager && establishmentId
+      ? { where: { id: Number(establishmentId) } }
+      : {}
+
+    const etabs = await prisma.establishment.findMany(etabsQuery)
     const byEstablishment = await Promise.all(
       etabs.map(async (e) => {
         const txs = await prisma.transaction.findMany({ where: { ...where, establishmentId: e.id } })
@@ -69,7 +83,7 @@ router.get('/', authAdmin, async (req, res) => {
       })
     )
 
-    // Évolution mensuelle — uniquement en mode "année complète"
+    // ── Évolution mensuelle — uniquement en mode "année complète" ─────────────
     let monthly = []
     const isYearMode = year && !month && !dateFrom && !dateTo
     if (isYearMode) {
@@ -87,7 +101,7 @@ router.get('/', authAdmin, async (req, res) => {
       }
     }
 
-    // Top 10 débiteurs
+    // ── Top 10 débiteurs — scoped au filtre courant ───────────────────────────
     const top10 = allClients
       .map((c) => {
         const conso = c.transactions.filter((t) => t.type === 'CONSOMMATION').reduce((s, t) => s + (t.consommation || 0), 0)
@@ -98,15 +112,14 @@ router.get('/', authAdmin, async (req, res) => {
       .sort((a, b) => b.solde - a.solde)
       .slice(0, 10)
 
-    // Répartition par moyen de paiement
-    const paiements = allTx.filter((t) => t.type === 'PAIEMENT')
+    // ── Répartition par moyen de paiement ────────────────────────────────────
     const moyensPaiement = {}
-    paiements.forEach((t) => {
+    allTx.filter((t) => t.type === 'PAIEMENT').forEach((t) => {
       const k = t.moyenPaiement || 'INCONNU'
       moyensPaiement[k] = (moyensPaiement[k] || 0) + (t.paiement || 0)
     })
 
-    // Contestations ouvertes
+    // ── Contestations ouvertes (globales — alerte indépendante des filtres) ───
     const contestationsOuvertes = await prisma.transaction.count({ where: { disputeStatus: 'OUVERTE' } })
 
     res.json({
