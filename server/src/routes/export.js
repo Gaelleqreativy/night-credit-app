@@ -13,7 +13,9 @@ function fmtDate(d) {
 }
 
 function fmtMoney(n) {
-  return Number(n || 0).toLocaleString('fr-FR') + ' FCFA'
+  // toLocaleString('fr-FR') uses U+00A0 (non-breaking space) as thousands separator
+  // PDFKit renders it as a slash — replace with regular space
+  return Number(n || 0).toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' FCFA'
 }
 
 function periodLabel(year, dateFrom, dateTo) {
