@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fond rond indigo foncé -->
+  <rect width="512" height="512" rx="112" fill="#1e1b4b"/>
+  <!-- Lune (forme croissant via deux cercles) -->
+  <circle cx="256" cy="210" r="120" fill="#e0e7ff"/>
+  <circle cx="306" cy="175" r="105" fill="#1e1b4b"/>
+  <!-- Ligne horizontale décorative -->
+  <rect x="130" y="355" width="252" height="14" rx="7" fill="#818cf8"/>
+  <!-- Petite étoile gauche -->
+  <circle cx="148" cy="210" r="10" fill="#818cf8"/>
+  <!-- Petite étoile droite haute -->
+  <circle cx="388" cy="155" r="7" fill="#a5b4fc"/>
+  <!-- Petite étoile droite basse -->
+  <circle cx="370" cy="290" r="5" fill="#c7d2fe"/>
+</svg>
