@@ -14,7 +14,7 @@ export default function ClientTransactions() {
   const [disputeLoading, setDisputeLoading] = useState(false)
 
   useEffect(() => {
-    // Récupérer les établissements visités (limités aux 15 derniers jours par le serveur)
+    // Récupérer les établissements visités (limités aux 30 derniers jours par le serveur)
     api.get('/transactions/me').then((r) => {
       const etabs = [...new Map(r.data.map((t) => [t.establishment.id, t.establishment])).values()]
       setEstablishments(etabs)
@@ -59,7 +59,7 @@ export default function ClientTransactions() {
           <h1 className="text-xl font-bold">Mes transactions</h1>
           <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1">
             <Clock size={12} />
-            15 derniers jours
+            30 derniers jours
           </span>
         </div>
 
