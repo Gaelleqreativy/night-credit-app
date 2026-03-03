@@ -18,7 +18,11 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(cookieParser())
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+
+const uploadsDir = process.env.DATA_DIR
+  ? path.join(process.env.DATA_DIR, 'uploads')
+  : path.join(__dirname, '../uploads')
+app.use('/uploads', express.static(uploadsDir))
 
 // Routes
 app.use('/api/auth', require('./routes/auth'))
@@ -34,5 +38,13 @@ app.use('/api/notifications', require('./routes/notifications'))
 
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
+// En production : servir le frontend React buildé
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '../../client/dist')
+  app.use(express.static(clientDist))
+  // SPA fallback — toutes les routes non-API renvoient index.html
+  app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')))
+}
+
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
