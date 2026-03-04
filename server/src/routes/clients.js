@@ -133,6 +133,44 @@ router.put('/:id/reset-pin', authAdmin, requireNotManager, async (req, res) => {
   }
 })
 
+// POST /api/clients/:id/merge — fusionner sourceId dans :id (ADMIN seulement)
+router.post('/:id/merge', authAdmin, requireNotManager, async (req, res) => {
+  const targetId = Number(req.params.id)
+  const sourceId = Number(req.body.sourceId)
+  if (!sourceId || sourceId === targetId)
+    return res.status(400).json({ error: 'sourceId invalide' })
+  if (req.user.role !== 'ADMIN')
+    return res.status(403).json({ error: 'Réservé aux administrateurs' })
+
+  try {
+    const [target, source] = await Promise.all([
+      prisma.client.findUnique({ where: { id: targetId } }),
+      prisma.client.findUnique({ where: { id: sourceId } }),
+    ])
+    if (!target) return res.status(404).json({ error: 'Client cible introuvable' })
+    if (!source) return res.status(404).json({ error: 'Client source introuvable' })
+
+    // Transférer toutes les transactions du source vers le target
+    await prisma.transaction.updateMany({
+      where: { clientId: sourceId },
+      data: { clientId: targetId },
+    })
+
+    // Supprimer le client source
+    await prisma.client.delete({ where: { id: sourceId } })
+
+    await logAudit(req.user.id, 'DELETE', 'Client', sourceId, {
+      action: 'merge',
+      mergedInto: targetId,
+      sourceName: `${source.lastName} ${source.firstName}`,
+    })
+
+    res.json({ message: 'Fusion effectuée' })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
 // PUT /api/clients/me/pin — client change son propre PIN
 router.put('/me/pin', authClient, async (req, res) => {
   const { currentPin, newPin } = req.body

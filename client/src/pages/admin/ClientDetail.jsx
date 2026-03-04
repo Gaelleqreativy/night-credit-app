@@ -4,7 +4,7 @@ import api from '../../api/axios'
 import StatusBadge from '../../components/StatusBadge'
 import Filters from '../../components/Filters'
 import { useAuth } from '../../context/AuthContext'
-import { ArrowLeft, Download, CreditCard, AlertTriangle, X, Camera, Pencil, ClipboardList, ChevronDown, ChevronUp, UtensilsCrossed } from 'lucide-react'
+import { ArrowLeft, Download, CreditCard, AlertTriangle, X, Camera, Pencil, ClipboardList, ChevronDown, ChevronUp, UtensilsCrossed, Merge } from 'lucide-react'
 
 const MOYENS = ['ESPECES', 'CB', 'VIREMENT', 'CHEQUE', 'MOBILE_MONEY']
 
@@ -27,6 +27,14 @@ export default function ClientDetail() {
   const [editName, setEditName] = useState(false)
   const [nameForm, setNameForm] = useState({ firstName: '', lastName: '' })
   const [nameLoading, setNameLoading] = useState(false)
+
+  // Modal fusion
+  const [showMerge, setShowMerge] = useState(false)
+  const [mergeSearch, setMergeSearch] = useState('')
+  const [mergeResults, setMergeResults] = useState([])
+  const [mergeTarget, setMergeTarget] = useState(null)
+  const [mergeLoading, setMergeLoading] = useState(false)
+  const [mergeError, setMergeError] = useState('')
 
   // Modal édition transaction
   const [editTx, setEditTx] = useState(null)
@@ -69,6 +77,35 @@ export default function ClientDetail() {
     await api.put(`/clients/${id}`, { status: newStatus })
     setClient((c) => ({ ...c, status: newStatus }))
     setEditStatus(false)
+  }
+
+  async function searchMerge(q) {
+    setMergeSearch(q)
+    setMergeTarget(null)
+    if (q.length < 2) { setMergeResults([]); return }
+    const { data } = await api.get(`/clients?search=${encodeURIComponent(q)}`)
+    setMergeResults(data.filter((c) => c.id !== Number(id)))
+  }
+
+  async function handleMerge() {
+    if (!mergeTarget) return
+    if (!confirm(`Fusionner "${mergeTarget.lastName} ${mergeTarget.firstName}" dans "${client.lastName} ${client.firstName}" ?\n\nToutes les transactions de ${mergeTarget.lastName} ${mergeTarget.firstName} seront déplacées ici, puis ce client sera supprimé. Cette action est irréversible.`)) return
+    setMergeLoading(true)
+    setMergeError('')
+    try {
+      await api.post(`/clients/${id}/merge`, { sourceId: mergeTarget.id })
+      // Recharger le client pour voir les nouvelles transactions
+      const { data } = await api.get(`/clients/${id}`)
+      setClient(data)
+      setShowMerge(false)
+      setMergeSearch('')
+      setMergeResults([])
+      setMergeTarget(null)
+    } catch (err) {
+      setMergeError(err.response?.data?.error || 'Erreur lors de la fusion')
+    } finally {
+      setMergeLoading(false)
+    }
   }
 
   async function deleteTransaction(txId) {
@@ -190,6 +227,7 @@ export default function ClientDetail() {
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> Excel</button>
           <button onClick={() => exportClient('pdf')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> PDF</button>
+          {isAdmin && <button onClick={() => { setShowMerge(true); setMergeSearch(''); setMergeResults([]); setMergeTarget(null); setMergeError('') }} className="btn-secondary text-sm flex items-center gap-1.5"><Merge size={13} /> Fusionner</button>}
           {!isManager && <Link to={`/admin/consommation?clientId=${id}`} className="btn-primary text-sm">+ Consommation</Link>}
           {!isManager && <Link to={`/admin/paiement?clientId=${id}`} className="btn-success text-sm flex items-center gap-1.5"><CreditCard size={13} /> Paiement</Link>}
         </div>
@@ -369,6 +407,75 @@ export default function ClientDetail() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal fusion */}
+      {showMerge && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="card w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2"><Merge size={18} /> Fusionner un doublon</h2>
+              <button onClick={() => setShowMerge(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Recherchez le client doublon à fusionner <strong>dans</strong> <span className="text-gray-900 font-medium">{client.lastName} {client.firstName}</span>.
+              Ses transactions seront déplacées ici, puis il sera supprimé.
+            </p>
+
+            <input
+              className="input mb-3"
+              placeholder="Rechercher par nom ou téléphone..."
+              value={mergeSearch}
+              onChange={(e) => searchMerge(e.target.value)}
+              autoFocus
+            />
+
+            {mergeResults.length > 0 && !mergeTarget && (
+              <div className="border border-gray-200 rounded-xl overflow-hidden mb-3 max-h-48 overflow-y-auto">
+                {mergeResults.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setMergeTarget(c)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
+                  >
+                    <span className="font-medium">{c.lastName} {c.firstName}</span>
+                    <span className="text-gray-500 text-xs ml-2">{c.phone}</span>
+                    <span className="text-red-600 text-xs ml-2">{Number(c.solde || 0).toLocaleString('fr-FR')} FCFA dû</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {mergeSearch.length >= 2 && mergeResults.length === 0 && !mergeTarget && (
+              <p className="text-sm text-gray-400 mb-3">Aucun client trouvé</p>
+            )}
+
+            {mergeTarget && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
+                <p className="text-sm font-medium text-amber-800">Client sélectionné :</p>
+                <p className="text-sm text-amber-900 mt-0.5">{mergeTarget.lastName} {mergeTarget.firstName} — {mergeTarget.phone}</p>
+                <p className="text-xs text-amber-700 mt-1">Solde dû : {Number(mergeTarget.solde || 0).toLocaleString('fr-FR')} FCFA</p>
+                <button onClick={() => { setMergeTarget(null) }} className="text-xs text-amber-600 hover:underline mt-1">Changer</button>
+              </div>
+            )}
+
+            {mergeError && <p className="text-red-600 text-sm mb-3">{mergeError}</p>}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+                disabled={!mergeTarget || mergeLoading}
+                onClick={handleMerge}
+              >
+                <Merge size={14} />
+                {mergeLoading ? 'Fusion en cours...' : 'Fusionner'}
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => setShowMerge(false)}>Annuler</button>
+            </div>
+          </div>
         </div>
       )}
 
