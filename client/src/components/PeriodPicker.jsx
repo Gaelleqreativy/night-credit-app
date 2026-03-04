@@ -7,6 +7,7 @@ const MONTHS_FR = [
 ]
 
 function buildParams(type, year, month, date) {
+  if (type === 'all') return {}
   if (type === 'year') return { year }
   if (type === 'month') {
     const y = year, m = month
@@ -33,7 +34,7 @@ function buildParams(type, year, month, date) {
 
 export default function PeriodPicker({ onChange }) {
   const now = new Date()
-  const [type, setType] = useState('year')
+  const [type, setType] = useState('all')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [date, setDate] = useState(now.toISOString().split('T')[0])
@@ -67,6 +68,7 @@ export default function PeriodPicker({ onChange }) {
   }
 
   function periodLabel() {
+    if (type === 'all') return 'Tout'
     if (type === 'year') return String(year)
     if (type === 'month') return `${MONTHS_FR[month - 1]} ${year}`
     if (type === 'week') {
@@ -85,7 +87,7 @@ export default function PeriodPicker({ onChange }) {
 
       {/* Sélecteur de type */}
       <div className="flex rounded-xl border border-gray-200 overflow-hidden text-xs font-medium">
-        {[['day', 'Jour'], ['week', 'Sem.'], ['month', 'Mois'], ['year', 'Année']].map(([t, lbl]) => (
+        {[['all', 'Tout'], ['day', 'Jour'], ['week', 'Sem.'], ['month', 'Mois'], ['year', 'Année']].map(([t, lbl]) => (
           <button
             key={t}
             type="button"
@@ -100,7 +102,7 @@ export default function PeriodPicker({ onChange }) {
       </div>
 
       {/* Navigation ‹ label/input › */}
-      <div className="flex items-center rounded-xl border border-gray-200 bg-white overflow-hidden">
+      {type !== 'all' && <div className="flex items-center rounded-xl border border-gray-200 bg-white overflow-hidden">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -129,7 +131,7 @@ export default function PeriodPicker({ onChange }) {
         >
           <ChevronRight size={15} />
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

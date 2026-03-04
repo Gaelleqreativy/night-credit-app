@@ -6,8 +6,6 @@ import { useAuth } from '../../context/AuthContext'
 import PeriodPicker from '../../components/PeriodPicker'
 import { AlertTriangle, ArrowRight, Banknote, CreditCard, UtensilsCrossed, Users } from 'lucide-react'
 
-const CURRENT_YEAR = new Date().getFullYear()
-
 function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
   const colorMap = {
     indigo: 'text-blue-600',
@@ -118,7 +116,7 @@ export default function AdminDashboard() {
   const { adminUser } = useAuth()
   const isManager = adminUser?.role === 'MANAGER'
   const [stats, setStats] = useState(null)
-  const [periodParams, setPeriodParams] = useState({ year: CURRENT_YEAR })
+  const [periodParams, setPeriodParams] = useState({})
   const [establishmentId, setEstablishmentId] = useState('')
   const [establishments, setEstablishments] = useState([])
   const [loading, setLoading] = useState(true)
