@@ -4,7 +4,7 @@ import api from '../../api/axios'
 import { SkeletonStat } from '../../components/Skeleton'
 import { useAuth } from '../../context/AuthContext'
 import PeriodPicker from '../../components/PeriodPicker'
-import { AlertTriangle, ArrowRight, Banknote, CreditCard, UtensilsCrossed, Users } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Banknote, CreditCard, UtensilsCrossed, Users, Clock } from 'lucide-react'
 
 function StatCard({ label, value, sub, color = 'indigo', link, icon }) {
   const colorMap = {
@@ -120,6 +120,8 @@ export default function AdminDashboard() {
   const [establishmentId, setEstablishmentId] = useState('')
   const [establishments, setEstablishments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [recentTx, setRecentTx] = useState([])
+  const [loadingTx, setLoadingTx] = useState(true)
 
   useEffect(() => {
     if (!isManager) api.get('/establishments').then((r) => setEstablishments(r.data))
@@ -127,14 +129,18 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setLoading(true)
+    setLoadingTx(true)
     const params = new URLSearchParams()
     if (periodParams.year) params.set('year', periodParams.year)
     if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
     if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
     if (!isManager && establishmentId) params.set('establishmentId', establishmentId)
-    api.get(`/stats?${params}`)
-      .then((r) => setStats(r.data))
-      .finally(() => setLoading(false))
+
+    api.get(`/stats?${params}`).then((r) => setStats(r.data)).finally(() => setLoading(false))
+
+    const txParams = new URLSearchParams(params)
+    txParams.set('limit', '20')
+    api.get(`/transactions?${txParams}`).then((r) => setRecentTx(r.data)).finally(() => setLoadingTx(false))
   }, [periodParams, establishmentId, isManager])
 
   if (isManager) {
@@ -196,6 +202,65 @@ export default function AdminDashboard() {
           <StatCard label="Clients actifs" value={stats?.clientsActifs || 0} sub="avec solde > 0" color="yellow" icon={<Users size={18} />} link="/admin/clients" />
         </div>
       )}
+
+      {/* Dernières saisies */}
+      <div className="card">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock size={16} className="text-gray-400" />
+          <h2 className="font-semibold">Dernières saisies</h2>
+          <span className="ml-auto text-xs text-gray-400">20 plus récentes (selon filtre)</span>
+        </div>
+        {loadingTx ? (
+          <div className="space-y-2 animate-pulse">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 bg-gray-100 rounded-xl" />
+            ))}
+          </div>
+        ) : recentTx.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-6">Aucune saisie pour cette période</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-500 border-b border-gray-100">
+                  <th className="text-left pb-2 font-medium">Date</th>
+                  <th className="text-left pb-2 font-medium">Client</th>
+                  <th className="text-left pb-2 font-medium hidden sm:table-cell">Établissement</th>
+                  <th className="text-left pb-2 font-medium">Type</th>
+                  <th className="text-right pb-2 font-medium">Montant</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {recentTx.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-2.5 text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(tx.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                    </td>
+                    <td className="py-2.5">
+                      <Link to={`/admin/clients/${tx.client?.id}`} className="text-blue-600 hover:underline font-medium">
+                        {tx.client?.lastName} {tx.client?.firstName}
+                      </Link>
+                    </td>
+                    <td className="py-2.5 text-gray-600 hidden sm:table-cell text-xs">{tx.establishment?.name}</td>
+                    <td className="py-2.5">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        tx.type === 'CONSOMMATION' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
+                      }`}>
+                        {tx.type === 'CONSOMMATION' ? 'Conso' : 'Paiement'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right font-semibold whitespace-nowrap">
+                      <span className={tx.type === 'CONSOMMATION' ? 'text-blue-600' : 'text-emerald-600'}>
+                        {Number(tx.type === 'CONSOMMATION' ? tx.consommation : tx.paiement || 0).toLocaleString('fr-FR')} FCFA
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Par établissement */}

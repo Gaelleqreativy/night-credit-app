@@ -23,6 +23,11 @@ export default function ClientDetail() {
   const [editStatus, setEditStatus] = useState(false)
   const [newStatus, setNewStatus] = useState('')
 
+  // Édition du nom client
+  const [editName, setEditName] = useState(false)
+  const [nameForm, setNameForm] = useState({ firstName: '', lastName: '' })
+  const [nameLoading, setNameLoading] = useState(false)
+
   // Modal édition transaction
   const [editTx, setEditTx] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -42,6 +47,23 @@ export default function ClientDetail() {
     setLoading(true)
     api.get(`/clients/${id}`).then((r) => { setClient(r.data); setNewStatus(r.data.status) }).finally(() => setLoading(false))
   }, [id])
+
+  function openEditName() {
+    setNameForm({ firstName: client.firstName, lastName: client.lastName })
+    setEditName(true)
+  }
+
+  async function handleNameSubmit(e) {
+    e.preventDefault()
+    setNameLoading(true)
+    try {
+      await api.put(`/clients/${id}`, nameForm)
+      setClient((c) => ({ ...c, ...nameForm }))
+      setEditName(false)
+    } finally {
+      setNameLoading(false)
+    }
+  }
 
   async function handleStatusUpdate() {
     await api.put(`/clients/${id}`, { status: newStatus })
@@ -131,7 +153,38 @@ export default function ClientDetail() {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <Link to="/admin/clients" className="text-gray-500 text-sm hover:text-gray-900 flex items-center gap-1"><ArrowLeft size={14} /> Retour</Link>
-          <h1 className="text-2xl font-bold mt-1">{client.lastName} {client.firstName}</h1>
+          {editName ? (
+            <form onSubmit={handleNameSubmit} className="flex items-center gap-2 mt-1 flex-wrap">
+              <input
+                className="input text-lg font-bold py-1 w-36"
+                value={nameForm.lastName}
+                onChange={(e) => setNameForm({ ...nameForm, lastName: e.target.value })}
+                placeholder="Nom"
+                required
+                autoFocus
+              />
+              <input
+                className="input text-lg font-bold py-1 w-36"
+                value={nameForm.firstName}
+                onChange={(e) => setNameForm({ ...nameForm, firstName: e.target.value })}
+                placeholder="Prénom"
+                required
+              />
+              <button type="submit" className="btn-primary text-sm py-1 px-3" disabled={nameLoading}>
+                {nameLoading ? '...' : 'OK'}
+              </button>
+              <button type="button" className="btn-secondary text-sm py-1 px-3" onClick={() => setEditName(false)}>Annuler</button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-2xl font-bold">{client.lastName} {client.firstName}</h1>
+              {!isManager && (
+                <button onClick={openEditName} className="text-gray-400 hover:text-blue-600 transition-colors" title="Modifier le nom">
+                  <Pencil size={15} />
+                </button>
+              )}
+            </div>
+          )}
           <p className="text-gray-500">{client.phone}</p>
         </div>
         <div className="flex gap-2 flex-wrap">

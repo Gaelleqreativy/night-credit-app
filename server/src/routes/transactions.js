@@ -45,6 +45,7 @@ router.get('/', authAdmin, async (req, res) => {
         createdBy: { select: { name: true } },
       },
       orderBy: { date: 'desc' },
+      ...(req.query.limit ? { take: Number(req.query.limit) } : {}),
     })
     res.json(transactions)
   } catch (e) {
