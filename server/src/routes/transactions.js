@@ -88,6 +88,8 @@ router.post('/consommation', authAdmin, requireNotManager, uploadTicket.single('
   const { clientId, establishmentId, ticketRef, consommation, date, notes } = req.body
   if (!clientId || !establishmentId || !consommation || !date)
     return res.status(400).json({ error: 'Champs requis manquants' })
+  if (Number(consommation) <= 0)
+    return res.status(400).json({ error: 'Le montant doit être supérieur à 0' })
 
   try {
     const ticketPhotoUrl = req.file ? `/uploads/${req.file.filename}` : null
@@ -121,6 +123,8 @@ router.post('/paiement', authAdmin, requireNotManager, async (req, res) => {
   const { clientId, establishmentId, paiement, moyenPaiement, date, notes } = req.body
   if (!clientId || !establishmentId || !paiement || !moyenPaiement || !date)
     return res.status(400).json({ error: 'Champs requis manquants' })
+  if (Number(paiement) <= 0)
+    return res.status(400).json({ error: 'Le montant doit être supérieur à 0' })
 
   const validMoyens = ['ESPECES', 'CB', 'VIREMENT', 'CHEQUE', 'MOBILE_MONEY']
   if (!validMoyens.includes(moyenPaiement))

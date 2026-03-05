@@ -10,7 +10,8 @@ app.use(cors({
   origin: (origin, cb) => {
     const allowed = process.env.CLIENT_URL || 'http://localhost:5173'
     // En dev : accepter aussi les IPs locales (test mobile sur WiFi)
-    if (!origin || origin === allowed || /^http:\/\/192\.168\.\d+\.\d+:\d+$/.test(origin))
+    const localNet = process.env.NODE_ENV !== 'production' && /^http:\/\/192\.168\.\d+\.\d+:\d+$/.test(origin)
+    if (!origin || origin === allowed || localNet)
       return cb(null, true)
     cb(new Error('Not allowed by CORS'))
   },

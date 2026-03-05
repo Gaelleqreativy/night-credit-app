@@ -1,6 +1,7 @@
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
+const crypto = require('crypto')
 
 const uploadDir = process.env.DATA_DIR
   ? path.join(process.env.DATA_DIR, 'uploads')
@@ -10,8 +11,8 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`)
+    const ext = path.extname(file.originalname).toLowerCase()
+    cb(null, `${crypto.randomBytes(16).toString('hex')}${ext}`)
   },
 })
 

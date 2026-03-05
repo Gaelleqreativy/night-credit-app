@@ -28,6 +28,16 @@ export default function ClientDetail() {
   const [nameForm, setNameForm] = useState({ firstName: '', lastName: '' })
   const [nameLoading, setNameLoading] = useState(false)
 
+  // Édition téléphone
+  const [editPhone, setEditPhone] = useState(false)
+  const [newPhone, setNewPhone] = useState('')
+  const [phoneLoading, setPhoneLoading] = useState(false)
+
+  // Édition plafond
+  const [editLimit, setEditLimit] = useState(false)
+  const [newLimit, setNewLimit] = useState('')
+  const [limitLoading, setLimitLoading] = useState(false)
+
   // Modal fusion
   const [showMerge, setShowMerge] = useState(false)
   const [mergeSearch, setMergeSearch] = useState('')
@@ -77,6 +87,30 @@ export default function ClientDetail() {
     await api.put(`/clients/${id}`, { status: newStatus })
     setClient((c) => ({ ...c, status: newStatus }))
     setEditStatus(false)
+  }
+
+  async function handlePhoneSubmit(e) {
+    e.preventDefault()
+    setPhoneLoading(true)
+    try {
+      await api.put(`/clients/${id}`, { phone: newPhone })
+      setClient((c) => ({ ...c, phone: newPhone }))
+      setEditPhone(false)
+    } finally {
+      setPhoneLoading(false)
+    }
+  }
+
+  async function handleLimitSubmit(e) {
+    e.preventDefault()
+    setLimitLoading(true)
+    try {
+      await api.put(`/clients/${id}`, { creditLimit: newLimit === '' ? null : Number(newLimit) })
+      setClient((c) => ({ ...c, creditLimit: newLimit === '' ? null : Number(newLimit) }))
+      setEditLimit(false)
+    } finally {
+      setLimitLoading(false)
+    }
   }
 
   async function searchMerge(q) {
@@ -222,7 +256,29 @@ export default function ClientDetail() {
               )}
             </div>
           )}
-          <p className="text-gray-500">{client.phone}</p>
+          {editPhone ? (
+            <form onSubmit={handlePhoneSubmit} className="flex items-center gap-2 mt-1">
+              <input
+                className="input py-1 w-40"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                placeholder="Téléphone"
+                required
+                autoFocus
+              />
+              <button type="submit" className="btn-primary text-sm py-1 px-3" disabled={phoneLoading}>{phoneLoading ? '...' : 'OK'}</button>
+              <button type="button" className="btn-secondary text-sm py-1 px-3" onClick={() => setEditPhone(false)}>Annuler</button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2">
+              <p className="text-gray-500">{client.phone}</p>
+              {!isManager && (
+                <button onClick={() => { setNewPhone(client.phone); setEditPhone(true) }} className="text-xs text-blue-600 hover:underline">
+                  Modifier
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> Excel</button>
@@ -251,8 +307,31 @@ export default function ClientDetail() {
         <div className="card">
           <p className="text-sm text-gray-500 mb-1">Statut</p>
           <StatusBadge status={client.status} />
-          {client.creditLimit && <p className="text-xs text-gray-500 mt-1">Plafond : {fmt(client.creditLimit)}</p>}
-          {!isManager && <button onClick={() => setEditStatus(true)} className="text-xs text-blue-600 mt-2 hover:underline">Modifier</button>}
+          {editLimit ? (
+            <form onSubmit={handleLimitSubmit} className="flex items-center gap-2 mt-1">
+              <input
+                type="number"
+                className="input text-xs py-1 w-28"
+                value={newLimit}
+                onChange={(e) => setNewLimit(e.target.value)}
+                placeholder="Plafond FCFA"
+                min="0"
+                autoFocus
+              />
+              <button type="submit" className="btn-primary text-xs px-2 py-1" disabled={limitLoading}>{limitLoading ? '...' : 'OK'}</button>
+              <button type="button" className="btn-secondary text-xs px-2 py-1" onClick={() => setEditLimit(false)}>✕</button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs text-gray-500">Plafond : {client.creditLimit ? fmt(client.creditLimit) : 'Aucun'}</p>
+              {!isManager && (
+                <button onClick={() => { setNewLimit(client.creditLimit || ''); setEditLimit(true) }} className="text-xs text-blue-600 hover:underline">
+                  Modifier
+                </button>
+              )}
+            </div>
+          )}
+          {!isManager && <button onClick={() => setEditStatus(true)} className="text-xs text-blue-600 mt-2 hover:underline">Modifier statut</button>}
           {editStatus && (
             <div className="mt-2 flex gap-2">
               <select className="input text-xs" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>

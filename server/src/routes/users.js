@@ -49,6 +49,8 @@ router.post('/', authAdmin, requireAdmin, async (req, res) => {
 // PUT /api/users/:id — modifier un utilisateur (ADMIN)
 router.put('/:id', authAdmin, requireAdmin, async (req, res) => {
   const { name, email, password, role, establishmentIds } = req.body
+  if (role && !['ADMIN', 'COMPTABLE', 'MANAGER'].includes(role))
+    return res.status(400).json({ error: 'Rôle invalide' })
   try {
     const data = {}
     if (name) data.name = name

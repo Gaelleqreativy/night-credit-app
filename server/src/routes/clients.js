@@ -59,10 +59,20 @@ router.get('/', authAdmin, async (req, res) => {
 // GET /api/clients/:id — détail avec solde
 router.get('/:id', authAdmin, async (req, res) => {
   try {
+    const clientId = Number(req.params.id)
+    const managerIds = req.user.role === 'MANAGER' ? (req.user.establishmentIds || []) : null
+
+    // MANAGER : accès interdit si aucune transaction dans ses établissements
+    if (managerIds) {
+      const access = await prisma.transaction.findFirst({ where: { clientId, establishmentId: { in: managerIds } } })
+      if (!access) return res.status(404).json({ error: 'Client introuvable' })
+    }
+
     const client = await prisma.client.findUnique({
-      where: { id: Number(req.params.id) },
+      where: { id: clientId },
       include: {
         transactions: {
+          where: managerIds ? { establishmentId: { in: managerIds } } : undefined,
           include: { establishment: true, createdBy: { select: { name: true } } },
           orderBy: { date: 'desc' },
         },
