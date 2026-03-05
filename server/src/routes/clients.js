@@ -116,9 +116,16 @@ router.post('/', authAdmin, requireNotManager, async (req, res) => {
 router.put('/:id', authAdmin, requireNotManager, async (req, res) => {
   const { firstName, lastName, phone, creditLimit, status } = req.body
   try {
+    const data = {}
+    if (firstName !== undefined) data.firstName = firstName
+    if (lastName !== undefined) data.lastName = lastName
+    if (phone !== undefined) data.phone = phone
+    if (creditLimit !== undefined) data.creditLimit = creditLimit === null ? null : Number(creditLimit)
+    if (status !== undefined) data.status = status
+
     const client = await prisma.client.update({
       where: { id: Number(req.params.id) },
-      data: { firstName, lastName, phone, creditLimit: creditLimit !== undefined ? Number(creditLimit) : undefined, status },
+      data,
     })
     await logAudit(req.user.id, 'UPDATE', 'Client', client.id, req.body)
     const { pin, ...result } = client

@@ -96,6 +96,8 @@ export default function ClientDetail() {
       await api.put(`/clients/${id}`, { phone: newPhone })
       setClient((c) => ({ ...c, phone: newPhone }))
       setEditPhone(false)
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erreur lors de la mise à jour')
     } finally {
       setPhoneLoading(false)
     }
@@ -104,10 +106,13 @@ export default function ClientDetail() {
   async function handleLimitSubmit(e) {
     e.preventDefault()
     setLimitLoading(true)
+    const val = newLimit === '' ? null : Number(newLimit)
     try {
-      await api.put(`/clients/${id}`, { creditLimit: newLimit === '' ? null : Number(newLimit) })
-      setClient((c) => ({ ...c, creditLimit: newLimit === '' ? null : Number(newLimit) }))
+      await api.put(`/clients/${id}`, { creditLimit: val })
+      setClient((c) => ({ ...c, creditLimit: val }))
       setEditLimit(false)
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erreur lors de la mise à jour')
     } finally {
       setLimitLoading(false)
     }
