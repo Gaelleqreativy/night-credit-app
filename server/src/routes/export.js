@@ -1,8 +1,21 @@
 const router = require('express').Router()
 const XLSX = require('xlsx')
 const PDFDocument = require('pdfkit')
+const jwt = require('jsonwebtoken')
 const { PrismaClient } = require('@prisma/client')
 const { authAdmin } = require('../middleware/auth')
+
+// Accepte cookie OU token court (_t) dans la query string (pour les téléchargements)
+function authExport(req, res, next) {
+  const token = req.cookies?.adminToken || req.headers.authorization?.split(' ')[1] || req.query._t
+  if (!token) return res.status(401).json({ error: 'Token manquant' })
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET)
+    next()
+  } catch {
+    res.status(401).json({ error: 'Token invalide' })
+  }
+}
 
 const prisma = new PrismaClient()
 
@@ -380,7 +393,7 @@ function buildClientPdf(res, client, transactions, totalConso, totalPaiement, so
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // GET /api/export/client/:id?format=xlsx|pdf&year=&dateFrom=&dateTo=
-router.get('/client/:id', authAdmin, async (req, res) => {
+router.get('/client/:id', authExport, async (req, res) => {
   const { format = 'xlsx', year, dateFrom, dateTo } = req.query
   try {
     const client = await prisma.client.findUnique({ where: { id: Number(req.params.id) } })
@@ -425,7 +438,7 @@ router.get('/client/:id', authAdmin, async (req, res) => {
 })
 
 // GET /api/export/global?format=xlsx&year=&dateFrom=&dateTo=&establishmentId=
-router.get('/global', authAdmin, async (req, res) => {
+router.get('/global', authExport, async (req, res) => {
   const { format = 'xlsx', year, dateFrom, dateTo, establishmentId } = req.query
   try {
     const dateRange = buildDateRange(year, dateFrom, dateTo)

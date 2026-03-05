@@ -198,20 +198,13 @@ export default function ClientDetail() {
   }
 
   async function exportClient(format) {
-    const params = new URLSearchParams({ format })
-    if (year) params.set('year', year)
     try {
-      const res = await api.get(`/export/client/${id}?${params}`, { responseType: 'blob' })
-      const ext = format === 'pdf' ? 'pdf' : 'xlsx'
-      const name = `client_${client?.lastName}_${client?.firstName}.${ext}`
-      const url = URL.createObjectURL(res.data)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = name
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      alert(err.response?.data?.error || "Erreur lors de l'export")
+      const { data } = await api.get('/auth/download-token')
+      const params = new URLSearchParams({ format, _t: data.token })
+      if (year) params.set('year', year)
+      window.open(`/api/export/client/${id}?${params}`, '_blank')
+    } catch {
+      // l'intercepteur axios gère le 401 → redirection vers login
     }
   }
 

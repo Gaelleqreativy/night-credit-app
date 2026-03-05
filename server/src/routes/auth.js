@@ -140,6 +140,23 @@ router.post('/client-logout', (req, res) => {
   res.json({ ok: true })
 })
 
+// GET /api/auth/download-token — token court (2 min) pour les téléchargements de fichiers
+router.get('/download-token', (req, res) => {
+  const token = req.cookies?.adminToken || req.headers.authorization?.split(' ')[1]
+  if (!token) return res.status(401).json({ error: 'Non connecté' })
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET)
+    const dt = jwt.sign(
+      { id: user.id, role: user.role, establishmentIds: user.establishmentIds },
+      process.env.JWT_SECRET,
+      { expiresIn: '2m' }
+    )
+    res.json({ token: dt })
+  } catch {
+    res.status(401).json({ error: 'Session expirée' })
+  }
+})
+
 // GET /api/auth/me — vérifier session admin depuis cookie
 router.get('/me', (req, res) => {
   const token = req.cookies.adminToken || req.headers.authorization?.split(' ')[1]

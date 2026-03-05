@@ -36,22 +36,16 @@ export default function StatsPage() {
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') }
 
   async function handleExport() {
-    const params = new URLSearchParams()
-    if (periodParams.year) params.set('year', periodParams.year)
-    if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
-    if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
-    if (establishmentId) params.set('establishmentId', establishmentId)
-    params.set('format', 'xlsx')
     try {
-      const res = await api.get(`/export/global?${params}`, { responseType: 'blob' })
-      const url = URL.createObjectURL(res.data)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'rapport_global.xlsx'
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      alert(err.response?.data?.error || "Erreur lors de l'export")
+      const { data } = await api.get('/auth/download-token')
+      const params = new URLSearchParams({ format: 'xlsx', _t: data.token })
+      if (periodParams.year) params.set('year', periodParams.year)
+      if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
+      if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
+      if (establishmentId) params.set('establishmentId', establishmentId)
+      window.open(`/api/export/global?${params}`, '_blank')
+    } catch {
+      // l'intercepteur axios gère le 401 → redirection vers login
     }
   }
 
