@@ -197,10 +197,22 @@ export default function ClientDetail() {
     }
   }
 
-  function exportClient(format) {
+  async function exportClient(format) {
     const params = new URLSearchParams({ format })
     if (year) params.set('year', year)
-    window.open(`/api/export/client/${id}?${params}`, '_blank')
+    try {
+      const res = await api.get(`/export/client/${id}?${params}`, { responseType: 'blob' })
+      const ext = format === 'pdf' ? 'pdf' : 'xlsx'
+      const name = `client_${client?.lastName}_${client?.firstName}.${ext}`
+      const url = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = name
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(err.response?.data?.error || "Erreur lors de l'export")
+    }
   }
 
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') + ' FCFA' }

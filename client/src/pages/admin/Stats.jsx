@@ -35,14 +35,24 @@ export default function StatsPage() {
 
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR') }
 
-  function buildExportUrl() {
+  async function handleExport() {
     const params = new URLSearchParams()
     if (periodParams.year) params.set('year', periodParams.year)
     if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
     if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
     if (establishmentId) params.set('establishmentId', establishmentId)
     params.set('format', 'xlsx')
-    return `/api/export/global?${params}`
+    try {
+      const res = await api.get(`/export/global?${params}`, { responseType: 'blob' })
+      const url = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'rapport_global.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(err.response?.data?.error || "Erreur lors de l'export")
+    }
   }
 
   const pieData = stats
@@ -71,7 +81,7 @@ export default function StatsPage() {
               ))}
             </select>
           )}
-          <button onClick={() => window.open(buildExportUrl(), '_blank')} className="btn-secondary text-sm">
+          <button onClick={handleExport} className="btn-secondary text-sm">
             <Download size={14} className="inline mr-1.5" />Export Excel
           </button>
         </div>
