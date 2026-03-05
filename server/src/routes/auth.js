@@ -5,20 +5,17 @@ const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
-const COOKIE_OPTS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  maxAge: 12 * 60 * 60 * 1000, // 12h
-  path: '/',
+// secure=true seulement si la connexion est réellement HTTPS
+// Railway transmet le proto original via X-Forwarded-Proto
+function isSecure(req) {
+  return req.headers['x-forwarded-proto'] === 'https' || req.protocol === 'https'
 }
 
-const CLIENT_COOKIE_OPTS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  maxAge: 24 * 60 * 60 * 1000, // 24h
-  path: '/',
+function cookieOpts(req) {
+  return { httpOnly: true, sameSite: 'lax', secure: isSecure(req), maxAge: 12 * 60 * 60 * 1000, path: '/' }
+}
+function clientCookieOpts(req) {
+  return { httpOnly: true, sameSite: 'lax', secure: isSecure(req), maxAge: 24 * 60 * 60 * 1000, path: '/' }
 }
 
 const MAX_ATTEMPTS = 5
@@ -65,7 +62,7 @@ router.post('/login', async (req, res) => {
     { expiresIn: '12h' }
   )
 
-  res.cookie('adminToken', token, COOKIE_OPTS)
+  res.cookie('adminToken', token, cookieOpts(req))
   res.json({
     user: {
       id: user.id,
@@ -115,7 +112,7 @@ router.post('/client-login', async (req, res) => {
     { expiresIn: '24h' }
   )
 
-  res.cookie('clientToken', token, CLIENT_COOKIE_OPTS)
+  res.cookie('clientToken', token, clientCookieOpts(req))
   res.json({
     client: {
       id: client.id,
