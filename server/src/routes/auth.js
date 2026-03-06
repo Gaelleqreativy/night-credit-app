@@ -6,8 +6,10 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 // secure=true seulement si la connexion est réellement HTTPS
-// Railway transmet le proto original via X-Forwarded-Proto
+// Override explicite via COOKIE_SECURE=true|false dans les variables Railway
 function isSecure(req) {
+  if (process.env.COOKIE_SECURE === 'false') return false
+  if (process.env.COOKIE_SECURE === 'true') return true
   return req.headers['x-forwarded-proto'] === 'https' || req.protocol === 'https'
 }
 
