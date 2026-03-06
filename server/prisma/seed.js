@@ -6,6 +6,10 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // Débloquer tous les comptes verrouillés (sécurité : réinitialise les lockouts après redéploiement)
+  await prisma.user.updateMany({ data: { loginAttempts: 0, loginLockedUntil: null } })
+  await prisma.client.updateMany({ data: { loginAttempts: 0, loginLockedUntil: null } })
+
   // Establishments
   const etab1 = await prisma.establishment.upsert({
     where: { id: 1 },
