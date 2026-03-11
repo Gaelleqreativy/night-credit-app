@@ -46,6 +46,13 @@ export default function ClientDetail() {
   const [mergeLoading, setMergeLoading] = useState(false)
   const [mergeError, setMergeError] = useState('')
 
+  // Modal photo ticket
+  const [photoUrl, setPhotoUrl] = useState(null)
+
+  // Export
+  const [exportLoading, setExportLoading] = useState('')
+  const [exportError, setExportError] = useState('')
+
   // Modal édition transaction
   const [editTx, setEditTx] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -198,13 +205,35 @@ export default function ClientDetail() {
   }
 
   async function exportClient(format) {
+    setExportLoading(format)
+    setExportError('')
     try {
-      const { data } = await api.get('/auth/download-token')
-      const params = new URLSearchParams({ format, _t: data.token })
+      const params = new URLSearchParams({ format })
       if (year) params.set('year', year)
-      window.open(`/api/export/client/${id}?${params}`, '_blank')
-    } catch {
-      // l'intercepteur axios gère le 401 → redirection vers login
+      const response = await api.get(`/export/client/${id}?${params}`, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `client_${client.lastName}_${client.firstName}_export.${format}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      // Tenter de lire le message d'erreur depuis le blob
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text().catch(() => '')
+        try {
+          const json = JSON.parse(text)
+          setExportError(json.error || "Erreur lors de l'export")
+        } catch {
+          setExportError("Erreur lors de l'export")
+        }
+      } else {
+        setExportError(err.response?.data?.error || err.message || "Erreur lors de l'export")
+      }
+    } finally {
+      setExportLoading('')
     }
   }
 
@@ -290,9 +319,14 @@ export default function ClientDetail() {
             </div>
           )}
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => exportClient('xlsx')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> Excel</button>
-          <button onClick={() => exportClient('pdf')} className="btn-secondary text-sm flex items-center gap-1.5"><Download size={13} /> PDF</button>
+        <div className="flex gap-2 flex-wrap items-center">
+          <button onClick={() => exportClient('xlsx')} disabled={!!exportLoading} className="btn-secondary text-sm flex items-center gap-1.5">
+            <Download size={13} /> {exportLoading === 'xlsx' ? 'Export...' : 'Excel'}
+          </button>
+          <button onClick={() => exportClient('pdf')} disabled={!!exportLoading} className="btn-secondary text-sm flex items-center gap-1.5">
+            <Download size={13} /> {exportLoading === 'pdf' ? 'Export...' : 'PDF'}
+          </button>
+          {exportError && <span className="text-red-600 text-xs">{exportError}</span>}
           {isAdmin && <button onClick={() => { setShowMerge(true); setMergeSearch(''); setMergeResults([]); setMergeTarget(null); setMergeError('') }} className="btn-secondary text-sm flex items-center gap-1.5"><Merge size={13} /> Fusionner</button>}
           {!isManager && <Link to={`/admin/consommation?clientId=${id}`} className="btn-primary text-sm">+ Consommation</Link>}
           {!isManager && <Link to={`/admin/paiement?clientId=${id}`} className="btn-success text-sm flex items-center gap-1.5"><CreditCard size={13} /> Paiement</Link>}
@@ -411,7 +445,13 @@ export default function ClientDetail() {
                   <td className="px-4 py-2 text-gray-500 hidden md:table-cell">
                     {t.ticketRef || '-'}
                     {t.ticketPhotoUrl && (
-                      <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="ml-2 text-blue-600 text-xs"><Camera size={13} /></a>
+                      <button
+                        onClick={() => setPhotoUrl(t.ticketPhotoUrl)}
+                        className="ml-2 text-blue-600 hover:text-blue-800 inline-flex items-center"
+                        title="Voir le ticket"
+                      >
+                        <Camera size={13} />
+                      </button>
                     )}
                   </td>
                   <td className="px-4 py-2 text-right text-blue-600">{t.consommation ? fmt(t.consommation) : '-'}</td>
@@ -496,6 +536,36 @@ export default function ClientDetail() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal photo ticket */}
+      {photoUrl && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+          onClick={() => setPhotoUrl(null)}
+        >
+          <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPhotoUrl(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300"
+            >
+              <X size={28} />
+            </button>
+            {photoUrl.match(/\.pdf$/i) ? (
+              <iframe src={photoUrl} className="w-full h-[80vh] rounded-lg" title="Ticket PDF" />
+            ) : (
+              <img src={photoUrl} alt="Photo ticket" className="max-h-[80vh] w-full object-contain rounded-lg" />
+            )}
+            <a
+              href={photoUrl}
+              download
+              className="mt-3 inline-flex items-center gap-1.5 text-white text-sm hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Download size={14} /> Télécharger
+            </a>
+          </div>
         </div>
       )}
 

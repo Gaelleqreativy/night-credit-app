@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import ClientLayout from '../../components/ClientLayout'
-import { Camera, AlertTriangle, Clock } from 'lucide-react'
+import { Camera, AlertTriangle, Clock, X } from 'lucide-react'
 import api from '../../api/axios'
 
 export default function ClientTransactions() {
@@ -9,6 +9,7 @@ export default function ClientTransactions() {
   const [establishmentId, setEstablishmentId] = useState('')
   const [type, setType] = useState('')
   const [loading, setLoading] = useState(true)
+  const [photoModal, setPhotoModal] = useState(null)
   const [disputeModal, setDisputeModal] = useState(null)
   const [disputeNote, setDisputeNote] = useState('')
   const [disputeLoading, setDisputeLoading] = useState(false)
@@ -137,9 +138,12 @@ export default function ClientTransactions() {
                     )}
                     <div className="flex gap-2 mt-1 justify-end items-center">
                       {t.ticketPhotoUrl && (
-                        <a href={t.ticketPhotoUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 flex items-center gap-1">
+                        <button
+                          onClick={() => setPhotoModal(t.ticketPhotoUrl)}
+                          className="text-xs text-blue-600 flex items-center gap-1"
+                        >
                           <Camera size={13} />Ticket
-                        </a>
+                        </button>
                       )}
                       {!t.disputed && t.type === 'CONSOMMATION' && (
                         <button
@@ -157,6 +161,28 @@ export default function ClientTransactions() {
           </div>
         )}
       </div>
+
+      {/* Modal photo ticket */}
+      {photoModal && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={() => setPhotoModal(null)}
+        >
+          <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute -top-10 right-0 text-white"
+              onClick={() => setPhotoModal(null)}
+            >
+              <X size={24} />
+            </button>
+            {photoModal.match(/\.pdf$/i) ? (
+              <iframe src={photoModal} className="w-full h-[80vh] rounded-xl" title="Ticket PDF" />
+            ) : (
+              <img src={photoModal} alt="Photo du ticket" className="w-full rounded-xl shadow-2xl" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Modal contestation */}
       {disputeModal && (

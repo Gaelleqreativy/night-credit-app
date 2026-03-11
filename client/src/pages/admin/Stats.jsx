@@ -37,13 +37,20 @@ export default function StatsPage() {
 
   async function handleExport() {
     try {
-      const { data } = await api.get('/auth/download-token')
-      const params = new URLSearchParams({ format: 'xlsx', _t: data.token })
+      const params = new URLSearchParams({ format: 'xlsx' })
       if (periodParams.year) params.set('year', periodParams.year)
       if (periodParams.dateFrom) params.set('dateFrom', periodParams.dateFrom)
       if (periodParams.dateTo) params.set('dateTo', periodParams.dateTo)
       if (establishmentId) params.set('establishmentId', establishmentId)
-      window.open(`/api/export/global?${params}`, '_blank')
+      const response = await api.get(`/export/global?${params}`, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `rapport_global.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
     } catch {
       // l'intercepteur axios gère le 401 → redirection vers login
     }
