@@ -208,30 +208,18 @@ export default function ClientDetail() {
     setExportLoading(format)
     setExportError('')
     try {
-      const params = new URLSearchParams({ format })
+      // Récupérer un token court (2 min) pour éviter les problèmes de cookie en prod
+      const { data } = await api.get('/auth/download-token')
+      const params = new URLSearchParams({ format, _t: data.token })
       if (year) params.set('year', year)
-      const response = await api.get(`/export/client/${id}?${params}`, { responseType: 'blob' })
-      const url = window.URL.createObjectURL(response.data)
       const a = document.createElement('a')
-      a.href = url
+      a.href = `/api/export/client/${id}?${params}`
       a.download = `client_${client.lastName}_${client.firstName}_export.${format}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
     } catch (err) {
-      // Tenter de lire le message d'erreur depuis le blob
-      if (err.response?.data instanceof Blob) {
-        const text = await err.response.data.text().catch(() => '')
-        try {
-          const json = JSON.parse(text)
-          setExportError(json.error || "Erreur lors de l'export")
-        } catch {
-          setExportError("Erreur lors de l'export")
-        }
-      } else {
-        setExportError(err.response?.data?.error || err.message || "Erreur lors de l'export")
-      }
+      setExportError(err.response?.data?.error || err.message || "Erreur lors de l'export")
     } finally {
       setExportLoading('')
     }
