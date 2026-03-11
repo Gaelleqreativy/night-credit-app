@@ -2,6 +2,7 @@ const router = require('express').Router()
 const { PrismaClient } = require('@prisma/client')
 const { authAdmin, authClient, requireNotManager, requireAdmin } = require('../middleware/auth')
 const { uploadTicket } = require('../middleware/upload')
+const { saveFile } = require('../services/storage')
 const { logAudit } = require('../services/audit')
 const { updateClientStatus } = require('../services/clientStatus')
 
@@ -92,7 +93,9 @@ router.post('/consommation', authAdmin, requireNotManager, uploadTicket.single('
     return res.status(400).json({ error: 'Le montant doit être supérieur à 0' })
 
   try {
-    const ticketPhotoUrl = req.file ? `/uploads/${req.file.filename}` : null
+    const ticketPhotoUrl = req.file
+      ? await saveFile(req.file.buffer, req.file.originalname, req.file.mimetype)
+      : null
     const tx = await prisma.transaction.create({
       data: {
         type: 'CONSOMMATION',
