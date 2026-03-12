@@ -543,8 +543,20 @@ export default function ClientDetail() {
             {photoUrl.match(/\.pdf$/i) ? (
               <iframe src={photoUrl} className="w-full h-[80vh] rounded-lg" title="Ticket PDF" />
             ) : (
-              <img src={photoUrl} alt="Photo ticket" className="max-h-[80vh] w-full object-contain rounded-lg" />
+              <img
+                src={photoUrl}
+                alt="Photo ticket"
+                className="max-h-[80vh] w-full object-contain rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
             )}
+            <div style={{ display: 'none' }} className="items-center justify-center h-40 text-white/70 text-sm flex-col gap-2">
+              <span>Photo non disponible</span>
+              <span className="text-xs opacity-60">(fichier supprimé ou introuvable)</span>
+            </div>
             <a
               href={photoUrl}
               download
