@@ -52,18 +52,28 @@ model AuditLog {
 }
 
 model Client {
-  id               Int           @id @default(autoincrement())
-  phone            String        @unique
+  id               Int            @id @default(autoincrement())
+  phone            String         @unique
   pin              String
   firstName        String
   lastName         String
   creditLimit      Float?
-  status           String        @default("EN_COURS") // "EN_COURS" | "SOLDE" | "EN_RETARD"
-  pinMustChange    Boolean       @default(false)
-  loginAttempts    Int           @default(0)
+  status           String         @default("EN_COURS") // "EN_COURS" | "SOLDE" | "EN_RETARD"
+  pinMustChange    Boolean        @default(false)
+  loginAttempts    Int            @default(0)
   loginLockedUntil DateTime?
   transactions     Transaction[]
-  createdAt        DateTime      @default(now())
+  recapRequests    RecapRequest[]
+  createdAt        DateTime       @default(now())
+}
+
+model RecapRequest {
+  id        Int      @id @default(autoincrement())
+  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  Int
+  message   String?
+  status    String   @default("PENDING") // "PENDING" | "DONE"
+  createdAt DateTime @default(now())
 }
 
 model Transaction {

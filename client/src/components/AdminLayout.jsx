@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import {
   LayoutDashboard, Users, UtensilsCrossed, CreditCard, TrendingUp,
-  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, LogOut, Menu, X, Building2, Clock,
+  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, LogOut, Menu, X, Building2, Clock, FileText,
 } from 'lucide-react'
 
 const navItems = [
@@ -54,10 +54,16 @@ function NotificationBell({ align = 'right' }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  async function markRecapDone(recapId, e) {
+    e.stopPropagation()
+    await api.patch(`/notifications/recap-request/${recapId}/done`).catch(() => {})
+    fetchNotifs()
+  }
+
   function handleItemClick(notif) {
     setOpen(false)
     if (notif.type === 'DISPUTE') navigate('/admin/disputes')
-    else navigate(`/admin/clients/${notif.clientId}`)
+    else if (notif.clientId) navigate(`/admin/clients/${notif.clientId}`)
   }
 
   const count = notifs.length
@@ -103,6 +109,25 @@ function NotificationBell({ align = 'right' }) {
                       </div>
                       <p className="text-sm font-medium mt-0.5 text-gray-900">{n.clientName}</p>
                       {n.note && <p className="text-xs text-gray-500 truncate mt-0.5">{n.note}</p>}
+                    </div>
+                  ) : n.type === 'RECAP_REQUEST' ? (
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText size={12} className="text-blue-600" />
+                          <span className="text-blue-600 text-xs font-medium">Demande récapitulatif</span>
+                        </div>
+                        <button
+                          onClick={(e) => markRecapDone(n.recapId, e)}
+                          className="text-xs text-gray-400 hover:text-green-600 transition-colors px-1"
+                          title="Marquer comme traité"
+                        >
+                          ✓
+                        </button>
+                      </div>
+                      <p className="text-sm font-medium mt-0.5 text-gray-900">{n.clientName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{n.clientPhone}</p>
+                      {n.message && <p className="text-xs text-gray-400 truncate mt-0.5">{n.message}</p>}
                     </div>
                   ) : n.type === 'EN_RETARD' ? (
                     <div>

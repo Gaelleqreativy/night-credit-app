@@ -75,6 +75,15 @@ router.get('/', authAdmin, async (req, res) => {
       }
     }
 
+    // Demandes de récapitulatif en attente
+    const recapWhere = { status: 'PENDING' }
+    const recapRequests = await prisma.recapRequest.findMany({
+      where: recapWhere,
+      include: { client: { select: { id: true, firstName: true, lastName: true, phone: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    })
+
     const notifications = [
       ...disputes.map((d) => ({
         type: 'DISPUTE',
@@ -85,11 +94,52 @@ router.get('/', authAdmin, async (req, res) => {
         date: d.date,
         note: d.disputeNote,
       })),
+      ...recapRequests.map((r) => ({
+        type: 'RECAP_REQUEST',
+        recapId: r.id,
+        clientId: r.client.id,
+        clientName: `${r.client.lastName} ${r.client.firstName}`,
+        clientPhone: r.client.phone,
+        message: r.message,
+        date: r.createdAt,
+      })),
       ...overLimit,
       ...enRetard,
     ]
 
     res.json({ notifications, count: notifications.length })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// POST /api/notifications/recap-request — client demande un récapitulatif
+router.post('/recap-request', authClient, async (req, res) => {
+  try {
+    const clientId = req.client.id
+    const { message } = req.body
+
+    // Éviter les doublons : une seule demande PENDING à la fois
+    const existing = await prisma.recapRequest.findFirst({
+      where: { clientId, status: 'PENDING' },
+    })
+    if (existing) return res.status(409).json({ error: 'Une demande est déjà en attente' })
+
+    await prisma.recapRequest.create({ data: { clientId, message: message || null } })
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// PATCH /api/notifications/recap-request/:id/done — marquer comme traité
+router.patch('/recap-request/:id/done', authAdmin, async (req, res) => {
+  try {
+    await prisma.recapRequest.update({
+      where: { id: Number(req.params.id) },
+      data: { status: 'DONE' },
+    })
+    res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
