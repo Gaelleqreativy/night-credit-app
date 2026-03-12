@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import {
   LayoutDashboard, Users, UtensilsCrossed, CreditCard, TrendingUp,
-  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, LogOut, Menu, X, Building2,
+  Upload, AlertTriangle, KeyRound, ClipboardList, Bell, LogOut, Menu, X, Building2, Clock,
 } from 'lucide-react'
 
 const navItems = [
@@ -30,7 +30,7 @@ const adminOnlyItems = [
   { to: '/admin/audit', label: 'Journal audit', Icon: ClipboardList },
 ]
 
-function NotificationBell() {
+function NotificationBell({ align = 'right' }) {
   const [notifs, setNotifs] = useState([])
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -78,7 +78,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-72 sm:w-80 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden">
+        <div className={`absolute ${align === 'left' ? 'left-0' : 'right-0'} top-full mt-1 w-80 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden`}>
           <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-900">Notifications</span>
             {count > 0 && <span className="badge badge-red text-xs">{count}</span>}
@@ -103,6 +103,17 @@ function NotificationBell() {
                       </div>
                       <p className="text-sm font-medium mt-0.5 text-gray-900">{n.clientName}</p>
                       {n.note && <p className="text-xs text-gray-500 truncate mt-0.5">{n.note}</p>}
+                    </div>
+                  ) : n.type === 'EN_RETARD' ? (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Clock size={12} className="text-orange-500" />
+                        <span className="text-orange-500 text-xs font-medium">En retard</span>
+                      </div>
+                      <p className="text-sm font-medium mt-0.5 text-gray-900">{n.clientName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {Number(n.solde).toLocaleString('fr-FR')} FCFA dû
+                      </p>
                     </div>
                   ) : (
                     <div>
@@ -161,7 +172,7 @@ export default function AdminLayout() {
               <h1 className="text-lg font-bold text-gray-800">SpiritTab</h1>
             </div>
             <div className="flex items-center gap-1">
-              <span className="hidden lg:block"><NotificationBell /></span>
+              <span className="hidden lg:block"><NotificationBell align="left" /></span>
               <button
                 className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}

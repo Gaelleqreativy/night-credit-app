@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const { PrismaClient } = require('@prisma/client')
-const { authAdmin } = require('../middleware/auth')
+const { authAdmin, authClient } = require('../middleware/auth')
 
 const prisma = new PrismaClient()
 
@@ -25,30 +25,55 @@ router.get('/', authAdmin, async (req, res) => {
       take: 20,
     })
 
-    // Clients dépassant leur plafond
+    // Clients avec solde > 0
     const clientWhere = isManager && managerIds.length
-      ? { creditLimit: { not: null }, transactions: { some: { establishmentId: { in: managerIds } } } }
-      : { creditLimit: { not: null } }
+      ? { transactions: { some: { establishmentId: { in: managerIds } } } }
+      : {}
 
     const clients = await prisma.client.findMany({
       where: clientWhere,
       include: { transactions: true },
     })
 
-    const overLimit = clients
-      .map((c) => {
-        const conso = c.transactions.filter((t) => t.type === 'CONSOMMATION').reduce((s, t) => s + (t.consommation || 0), 0)
-        const paid = c.transactions.filter((t) => t.type === 'PAIEMENT').reduce((s, t) => s + (t.paiement || 0), 0)
-        return { ...c, solde: Math.max(0, conso - paid) }
-      })
-      .filter((c) => c.solde > c.creditLimit)
-      .map((c) => ({
-        type: 'OVER_LIMIT',
-        clientId: c.id,
-        clientName: `${c.lastName} ${c.firstName}`,
-        solde: c.solde,
-        creditLimit: c.creditLimit,
-      }))
+    const overLimit = []
+    const enRetard = []
+
+    for (const c of clients) {
+      const conso = c.transactions.filter((t) => t.type === 'CONSOMMATION').reduce((s, t) => s + (t.consommation || 0), 0)
+      const paid = c.transactions.filter((t) => t.type === 'PAIEMENT').reduce((s, t) => s + (t.paiement || 0), 0)
+      const solde = Math.max(0, conso - paid)
+
+      if (solde <= 0) continue
+
+      // Plafond dépassé
+      if (c.creditLimit && solde > c.creditLimit) {
+        overLimit.push({
+          type: 'OVER_LIMIT',
+          clientId: c.id,
+          clientName: `${c.lastName} ${c.firstName}`,
+          solde,
+          creditLimit: c.creditLimit,
+        })
+        continue
+      }
+
+      // En retard : solde > 0 et dernière conso date de plus de 30 jours
+      const lastConso = c.transactions
+        .filter((t) => t.type === 'CONSOMMATION')
+        .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+
+      if (lastConso) {
+        const daysSince = (Date.now() - new Date(lastConso.date).getTime()) / (1000 * 60 * 60 * 24)
+        if (daysSince > 30) {
+          enRetard.push({
+            type: 'EN_RETARD',
+            clientId: c.id,
+            clientName: `${c.lastName} ${c.firstName}`,
+            solde,
+          })
+        }
+      }
+    }
 
     const notifications = [
       ...disputes.map((d) => ({
@@ -61,7 +86,61 @@ router.get('/', authAdmin, async (req, res) => {
         note: d.disputeNote,
       })),
       ...overLimit,
+      ...enRetard,
     ]
+
+    res.json({ notifications, count: notifications.length })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// GET /api/notifications/client — alertes pour l'espace client connecté
+router.get('/client', authClient, async (req, res) => {
+  try {
+    const clientId = req.client.id
+
+    // Contestations résolues récentes (7 derniers jours)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const resolvedDisputes = await prisma.transaction.findMany({
+      where: {
+        clientId,
+        disputeStatus: 'RESOLUE',
+        updatedAt: { gte: sevenDaysAgo },
+      },
+      include: { establishment: { select: { name: true } } },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+    })
+
+    // Paiements récents (7 derniers jours)
+    const recentPayments = await prisma.transaction.findMany({
+      where: {
+        clientId,
+        type: 'PAIEMENT',
+        date: { gte: sevenDaysAgo },
+      },
+      include: { establishment: { select: { name: true } } },
+      orderBy: { date: 'desc' },
+      take: 10,
+    })
+
+    const notifications = [
+      ...resolvedDisputes.map((d) => ({
+        type: 'DISPUTE_RESOLUE',
+        txId: d.id,
+        establishment: d.establishment.name,
+        date: d.updatedAt,
+        note: d.disputeNote,
+      })),
+      ...recentPayments.map((p) => ({
+        type: 'PAIEMENT',
+        txId: p.id,
+        establishment: p.establishment.name,
+        date: p.date,
+        montant: p.paiement,
+      })),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date))
 
     res.json({ notifications, count: notifications.length })
   } catch (e) {
